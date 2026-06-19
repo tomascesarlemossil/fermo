@@ -48,6 +48,9 @@ model Tenant {
   stockMovements   StockMovement[]
   purchaseOrders   PurchaseOrder[]
   purchaseOrderItems PurchaseOrderItem[]
+  financialEntries FinancialEntry[]
+  invoices         Invoice[]
+  shipments        Shipment[]
   files            File[]
   notifications    Notification[]
 }
@@ -529,6 +532,8 @@ model SalesOrder {
   quote           Quote?           @relation(fields: [quoteId], references: [id])
   items           SalesOrderItem[]
   productionOrders ProductionOrder[]
+  invoices        Invoice[]
+  shipments       Shipment[]
 
   @@unique([tenantId, number])
   @@index([tenantId])
@@ -813,6 +818,97 @@ model PurchaseOrderItem {
 
   @@index([tenantId])
   @@index([purchaseOrderId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Financeiro & Logística (Fase 5)
+// ──────────────────────────────────────────────────────────────
+
+enum FinancialType {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum FinancialKind {
+  SALE
+  PURCHASE
+  COMMISSION
+  OTHER
+}
+
+enum FinancialStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
+model FinancialEntry {
+  id          String          @id @default(cuid())
+  tenantId    String
+  type        FinancialType
+  kind        FinancialKind   @default(OTHER)
+  status      FinancialStatus @default(OPEN)
+  description String
+  amount      Decimal         @db.Decimal(14, 2)
+  dueDate     DateTime
+  paidDate    DateTime?
+  // referências (escalares; sem FK para reduzir acoplamento)
+  customerId      String?
+  supplierId      String?
+  salesOrderId    String?
+  purchaseOrderId String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, type, status])
+}
+
+enum InvoiceStatus {
+  ISSUED
+  CANCELLED
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  tenantId     String
+  number       String // ex.: "NF-2026-0001"
+  salesOrderId String
+  status       InvoiceStatus @default(ISSUED)
+  total        Decimal       @db.Decimal(14, 2)
+  issuedAt     DateTime      @default(now())
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+}
+
+enum ShipmentStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+model Shipment {
+  id           String         @id @default(cuid())
+  tenantId     String
+  salesOrderId String
+  status       ShipmentStatus @default(PENDING)
+  carrier      String?
+  trackingCode String?
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 // ──────────────────────────────────────────────────────────────

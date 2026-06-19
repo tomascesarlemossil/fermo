@@ -39,6 +39,9 @@ export const TENANT_MODELS = new Set<string>([
   "StockMovement",
   "PurchaseOrder",
   "PurchaseOrderItem",
+  "FinancialEntry",
+  "Invoice",
+  "Shipment",
   "File",
   "Notification",
 ]);
@@ -62,6 +65,9 @@ export const AUDITED_MODELS = new Set<string>([
   "QualityInspection",
   "Supplier",
   "PurchaseOrder",
+  "FinancialEntry",
+  "Invoice",
+  "Shipment",
   "User",
 ]);
 

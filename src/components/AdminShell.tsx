@@ -17,6 +17,9 @@ import {
   ShoppingCart,
   Calculator,
   Truck,
+  Wallet,
+  Receipt,
+  Send,
   LogOut,
   Menu,
   X,
@@ -39,6 +42,9 @@ const ICONS: Record<string, LucideIcon> = {
   purchasing: ShoppingCart,
   mrp: Calculator,
   suppliers: Truck,
+  finance: Wallet,
+  invoices: Receipt,
+  shipping: Send,
 };
 
 function NavLinks({

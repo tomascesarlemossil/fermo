@@ -5,13 +5,14 @@ import { prisma } from "@/lib/prisma";
  * v1: deriva da contagem dentro de uma transação. Suficiente para o volume
  * atual; pode virar tabela de sequência se houver concorrência alta.
  */
-type Doc = "quote" | "order" | "production" | "purchase";
+type Doc = "quote" | "order" | "production" | "purchase" | "invoice";
 
 const PREFIX: Record<Doc, string> = {
   quote: "ORC",
   order: "PED",
   production: "OP",
   purchase: "PC",
+  invoice: "NF",
 };
 
 export async function nextNumber(doc: Doc, year = new Date().getFullYear()): Promise<string> {
@@ -28,6 +29,8 @@ export async function nextNumber(doc: Doc, year = new Date().getFullYear()): Pro
         return prisma.productionOrder.count({ where: { number: { startsWith: like } } });
       case "purchase":
         return prisma.purchaseOrder.count({ where: { number: { startsWith: like } } });
+      case "invoice":
+        return prisma.invoice.count({ where: { number: { startsWith: like } } });
     }
   })();
 

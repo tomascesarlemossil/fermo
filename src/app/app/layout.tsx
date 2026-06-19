@@ -18,6 +18,9 @@ const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
   { href: "/app/purchasing", label: "Compras", icon: "purchasing", perm: "purchase:read" },
   { href: "/app/mrp", label: "MRP", icon: "mrp", perm: "purchase:read" },
   { href: "/app/suppliers", label: "Fornecedores", icon: "suppliers", perm: "supplier:read" },
+  { href: "/app/finance", label: "Financeiro", icon: "finance", perm: "finance:read" },
+  { href: "/app/invoices", label: "Faturamento", icon: "invoices", perm: "finance:read" },
+  { href: "/app/shipping", label: "Expedição", icon: "shipping", perm: "shipping:read" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
