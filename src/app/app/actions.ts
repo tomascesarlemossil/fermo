@@ -28,11 +28,13 @@ export async function convertLeadAction(formData: FormData) {
 
 export async function createQuoteAction(formData: FormData) {
   // Itens chegam como linhas paralelas: desc[], qty[], price[]
+  const productIds = formData.getAll("productId").map(String);
   const descs = formData.getAll("desc").map(String);
   const qtys = formData.getAll("qty").map((v) => Number(v));
   const prices = formData.getAll("price").map((v) => Number(v));
   const items = descs
     .map((description, i) => ({
+      productId: productIds[i] || undefined,
       description,
       quantity: qtys[i] || 0,
       unitPrice: prices[i] || 0,

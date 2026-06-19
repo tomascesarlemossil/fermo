@@ -186,6 +186,32 @@ async function seedTenantFermo() {
     await prisma.techSheet.update({ where: { id: sheet.id }, data: { currentVersion: 1 } });
   }
 
+  // ── Suprimentos (Fase 4): fornecedores + estoque inicial ──
+  await prisma.supplier.upsert({
+    where: { id: `${t}-sup-couro` },
+    update: {},
+    create: { id: `${t}-sup-couro`, tenantId: t, name: "Curtume Franca", kind: "MATERIAL", email: "vendas@curtumefranca.com.br" },
+  });
+  await prisma.supplier.upsert({
+    where: { id: `${t}-sup-faccao` },
+    update: {},
+    create: { id: `${t}-sup-faccao`, tenantId: t, name: "Facção Bom Pesponto", kind: "FACCAO", email: "contato@bompesponto.com.br" },
+  });
+
+  // estoque inicial de couro liso
+  const couro = matIds["COURO-LISO"];
+  if (couro) {
+    const bal = await prisma.stockBalance.findFirst({ where: { tenantId: t, refType: "MATERIAL", refId: couro } });
+    if (!bal) {
+      await prisma.stockBalance.create({
+        data: { tenantId: t, refType: "MATERIAL", refId: couro, quantity: 20, reserved: 0 },
+      });
+      await prisma.stockMovement.create({
+        data: { tenantId: t, refType: "MATERIAL", refId: couro, type: "IN", quantity: 20, note: "Estoque inicial (seed)" },
+      });
+    }
+  }
+
   const customer = await prisma.customer.upsert({
     where: { id: `${t}-cust-demo` },
     update: {},

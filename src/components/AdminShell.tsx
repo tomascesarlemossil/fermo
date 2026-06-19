@@ -13,6 +13,10 @@ import {
   Boxes,
   Layers,
   ShieldCheck,
+  Warehouse,
+  ShoppingCart,
+  Calculator,
+  Truck,
   LogOut,
   Menu,
   X,
@@ -31,6 +35,10 @@ const ICONS: Record<string, LucideIcon> = {
   orders: ClipboardList,
   production: Factory,
   quality: ShieldCheck,
+  stock: Warehouse,
+  purchasing: ShoppingCart,
+  mrp: Calculator,
+  suppliers: Truck,
 };
 
 function NavLinks({

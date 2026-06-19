@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { withSession } from "@/lib/session";
 import { listCustomers } from "@/server/crm";
+import { listProducts } from "@/server/catalog";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { QuoteForm } from "./QuoteForm";
 
 export default async function NewQuotePage() {
-  const customers = await withSession(() => listCustomers(), { permission: "quote:write" });
+  const { customers, products } = await withSession(
+    async () => ({ customers: await listCustomers(), products: await listProducts() }),
+    { permission: "quote:write" },
+  );
 
   return (
     <>
@@ -28,7 +32,10 @@ export default async function NewQuotePage() {
             .
           </EmptyState>
         ) : (
-          <QuoteForm customers={customers.map((c) => ({ id: c.id, name: c.name }))} />
+          <QuoteForm
+            customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+            products={products.map((p) => ({ id: p.id, name: p.name, basePrice: Number(p.basePrice) }))}
+          />
         )}
       </div>
     </>

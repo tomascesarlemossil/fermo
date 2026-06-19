@@ -4,10 +4,11 @@ import { useState } from "react";
 import { createQuoteAction } from "@/app/app/actions";
 
 type Customer = { id: string; name: string };
-type Row = { description: string; quantity: number; unitPrice: number };
+type Product = { id: string; name: string; basePrice: number };
+type Row = { productId: string; description: string; quantity: number; unitPrice: number };
 
-export function QuoteForm({ customers }: { customers: Customer[] }) {
-  const [rows, setRows] = useState<Row[]>([{ description: "", quantity: 1, unitPrice: 0 }]);
+export function QuoteForm({ customers, products }: { customers: Customer[]; products: Product[] }) {
+  const [rows, setRows] = useState<Row[]>([{ productId: "", description: "", quantity: 1, unitPrice: 0 }]);
   const [discount, setDiscount] = useState(0);
 
   const subtotal = rows.reduce((s, r) => s + r.quantity * r.unitPrice, 0);
@@ -15,6 +16,15 @@ export function QuoteForm({ customers }: { customers: Customer[] }) {
 
   function update(i: number, patch: Partial<Row>) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  }
+
+  function onProduct(i: number, productId: string) {
+    const p = products.find((x) => x.id === productId);
+    update(i, {
+      productId,
+      description: p ? p.name : rows[i].description,
+      unitPrice: p && p.basePrice ? p.basePrice : rows[i].unitPrice,
+    });
   }
 
   return (
@@ -37,7 +47,7 @@ export function QuoteForm({ customers }: { customers: Customer[] }) {
           <button
             type="button"
             className="btn-ghost"
-            onClick={() => setRows((rs) => [...rs, { description: "", quantity: 1, unitPrice: 0 }])}
+            onClick={() => setRows((rs) => [...rs, { productId: "", description: "", quantity: 1, unitPrice: 0 }])}
           >
             + Item
           </button>
@@ -46,14 +56,30 @@ export function QuoteForm({ customers }: { customers: Customer[] }) {
         <div className="space-y-3">
           {rows.map((r, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-6">
+              <div className="col-span-3">
+                {i === 0 && <label className="label">Produto</label>}
+                <select
+                  name="productId"
+                  value={r.productId}
+                  onChange={(e) => onProduct(i, e.target.value)}
+                  className="input"
+                >
+                  <option value="">(livre)</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-3">
                 {i === 0 && <label className="label">Descrição</label>}
                 <input
                   name="desc"
                   value={r.description}
                   onChange={(e) => update(i, { description: e.target.value })}
                   className="input"
-                  placeholder="Ex.: Mocassim couro liso, grade 33-40"
+                  placeholder="Ex.: Mocassim couro liso"
                   required
                 />
               </div>

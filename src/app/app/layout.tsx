@@ -14,6 +14,10 @@ const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
   { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read" },
   { href: "/app/production", label: "Produção", icon: "production", perm: "production:read" },
   { href: "/app/quality", label: "Qualidade", icon: "quality", perm: "quality:read" },
+  { href: "/app/stock", label: "Estoque", icon: "stock", perm: "stock:read" },
+  { href: "/app/purchasing", label: "Compras", icon: "purchasing", perm: "purchase:read" },
+  { href: "/app/mrp", label: "MRP", icon: "mrp", perm: "purchase:read" },
+  { href: "/app/suppliers", label: "Fornecedores", icon: "suppliers", perm: "supplier:read" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

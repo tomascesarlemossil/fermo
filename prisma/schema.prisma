@@ -43,6 +43,11 @@ model Tenant {
   productionEvents ProductionEvent[]
   qualityInspections QualityInspection[]
   qualityDefects   QualityDefect[]
+  suppliers        Supplier[]
+  stockBalances    StockBalance[]
+  stockMovements   StockMovement[]
+  purchaseOrders   PurchaseOrder[]
+  purchaseOrderItems PurchaseOrderItem[]
   files            File[]
   notifications    Notification[]
 }
@@ -303,8 +308,9 @@ model Material {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  bomItems BomItem[]
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bomItems           BomItem[]
+  purchaseOrderItems PurchaseOrderItem[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -686,6 +692,127 @@ model QualityDefect {
 
   @@index([tenantId])
   @@index([inspectionId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Suprimentos (Fase 4) — fornecedores, estoque, compras, MRP, facção
+// ──────────────────────────────────────────────────────────────
+
+enum SupplierKind {
+  MATERIAL
+  FACCAO
+}
+
+model Supplier {
+  id        String       @id @default(cuid())
+  tenantId  String
+  name      String
+  cnpj      String?
+  email     String?
+  phone     String?
+  kind      SupplierKind @default(MATERIAL)
+  notes     String?
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+
+  @@index([tenantId])
+}
+
+enum StockRefType {
+  MATERIAL
+  PRODUCT
+}
+
+model StockBalance {
+  id        String       @id @default(cuid())
+  tenantId  String
+  refType   StockRefType
+  refId     String
+  quantity  Decimal      @default(0) @db.Decimal(14, 4)
+  reserved  Decimal      @default(0) @db.Decimal(14, 4)
+  updatedAt DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, refType, refId])
+  @@index([tenantId])
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  RESERVE
+  RELEASE
+  ADJUST
+}
+
+model StockMovement {
+  id        String            @id @default(cuid())
+  tenantId  String
+  refType   StockRefType
+  refId     String
+  type      StockMovementType
+  quantity  Decimal           @db.Decimal(14, 4)
+  note      String?
+  refDoc    String? // ex.: número da PO ou OP
+  createdAt DateTime          @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, refType, refId])
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  tenantId    String
+  number      String // ex.: "PC-2026-0001"
+  supplierId  String
+  status      PurchaseOrderStatus @default(DRAFT)
+  total       Decimal             @default(0) @db.Decimal(14, 2)
+  publicToken String              @unique @default(cuid()) // portal da facção
+  notes       String?
+  expectedAt  DateTime?
+  receivedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier            @relation(fields: [supplierId], references: [id])
+  items    PurchaseOrderItem[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model PurchaseOrderItem {
+  id              String  @id @default(cuid())
+  tenantId        String
+  purchaseOrderId String
+  materialId      String?
+  description     String
+  quantity        Decimal @db.Decimal(14, 4)
+  unitCost        Decimal @db.Decimal(14, 4)
+  lineTotal       Decimal @db.Decimal(14, 2)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  material      Material?     @relation(fields: [materialId], references: [id])
+
+  @@index([tenantId])
+  @@index([purchaseOrderId])
 }
 
 // ──────────────────────────────────────────────────────────────
