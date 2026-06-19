@@ -6,3 +6,6 @@ prisma/dev.db-journal
 *.log
 
 .vercel
+
+# build artifacts
+tsconfig.tsbuildinfo

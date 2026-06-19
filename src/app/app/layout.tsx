@@ -1,0 +1,35 @@
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { signOut } from "@/lib/auth";
+import { can, type PermissionKey } from "@/lib/rbac";
+import { Sidebar, type NavItem } from "@/components/Sidebar";
+
+const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
+  { href: "/app", label: "Painel", icon: "dashboard" },
+  { href: "/app/crm/leads", label: "Leads", icon: "leads", perm: "lead:read" },
+  { href: "/app/customers", label: "Clientes", icon: "customers", perm: "customer:read" },
+  { href: "/app/quotes", label: "Orçamentos", icon: "quotes", perm: "quote:read" },
+  { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read" },
+  { href: "/app/production", label: "Produção", icon: "production", perm: "production:read" },
+];
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const items: NavItem[] = ALL_NAV.filter((n) => !n.perm || can(session, n.perm)).map(
+    ({ href, label, icon }) => ({ href, label, icon }),
+  );
+
+  async function logout() {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  }
+
+  return (
+    <div className="flex min-h-screen bg-bone">
+      <Sidebar items={items} user={{ name: session.name, roleKey: session.roleKey }} logout={logout} />
+      <main className="flex-1 min-w-0">{children}</main>
+    </div>
+  );
+}

@@ -1,0 +1,493 @@
+// Fermo — Plataforma (Fábrica de calçados sob encomenda)
+// Schema núcleo (Fases 0–1). Multi-tenant single-database.
+// PostgreSQL (Neon em produção). Toda entidade de negócio tem tenantId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────────────────────
+// Tenancy & organização
+// ──────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies        Company[]
+  users            User[]
+  customers        Customer[]
+  leads            Lead[]
+  opportunities    Opportunity[]
+  products         Product[]
+  sizeGrids        SizeGrid[]
+  configRequests   ConfigRequest[]
+  quotes           Quote[]
+  salesOrders      SalesOrder[]
+  productionOrders ProductionOrder[]
+  files            File[]
+  notifications    Notification[]
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  cnpj      String?
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Identidade, RBAC
+// Role e Permission são globais (catálogo). User pertence a um tenant.
+// ──────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique // ex: "admin", "comercial", "producao", "cliente"
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  users           User[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique // ex: "quote:approve"
+  description String?
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  name         String
+  passwordHash String
+  roleId       String
+  // Para usuários do portal do cliente: vínculo opcional com Customer
+  customerId   String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role     Role      @relation(fields: [roleId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Auditoria
+// ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  action    String // CREATE | UPDATE | DELETE
+  model     String
+  recordId  String?
+  before    Json?
+  after     Json?
+  source    String? // ex: "server-action", "api", "seed"
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([tenantId, model])
+}
+
+// ──────────────────────────────────────────────────────────────
+// CRM — clientes / leads / oportunidades
+// ──────────────────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String // marca / razão social
+  cnpj      String?
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contacts    CustomerContact[]
+  addresses   Address[]
+  leads       Lead[]
+  quotes      Quote[]
+  salesOrders SalesOrder[]
+  users       User[]
+
+  @@index([tenantId])
+}
+
+model CustomerContact {
+  id         String   @id @default(cuid())
+  tenantId   String
+  customerId String
+  name       String
+  email      String?
+  phone      String?
+  role       String?
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  tenantId   String
+  customerId String
+  label      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  zip        String?
+  country    String  @default("BR")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  tenantId  String
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  message   String?
+  source    String? // ex: "site", "configurador", "indicacao"
+  status    LeadStatus @default(NEW)
+  // vínculo após qualificação/conversão
+  customerId String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer     Customer?      @relation(fields: [customerId], references: [id])
+  opportunities Opportunity[]
+  configRequest ConfigRequest?
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+enum OpportunityStage {
+  NEW
+  QUALIFICATION
+  QUOTING
+  NEGOTIATION
+  WON
+  LOST
+}
+
+model Opportunity {
+  id        String           @id @default(cuid())
+  tenantId  String
+  title     String
+  leadId    String?
+  stage     OpportunityStage @default(NEW)
+  value     Decimal?         @db.Decimal(12, 2)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+  quotes Quote[]
+
+  @@index([tenantId])
+  @@index([tenantId, stage])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Catálogo básico / grade / configurador
+// ──────────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String
+  sku         String
+  name        String
+  description String?
+  basePrice   Decimal  @default(0) @db.Decimal(12, 2)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sizeGridId String?
+  sizeGrid   SizeGrid?       @relation(fields: [sizeGridId], references: [id])
+  quoteItems QuoteItem[]
+  orderItems SalesOrderItem[]
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+}
+
+model SizeGrid {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String // ex: "Feminino 33-40"
+  sizes     Int[] // ex: [33,34,35,...]
+  createdAt DateTime @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([tenantId])
+}
+
+model ConfigRequest {
+  id        String   @id @default(cuid())
+  tenantId  String
+  leadId    String?  @unique
+  // payload do configurador passo a passo (modelo, couro, cor, solado, grade...)
+  payload   Json
+  summary   String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lead   Lead?  @relation(fields: [leadId], references: [id])
+
+  @@index([tenantId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Orçamento (Quote) com versões
+// ──────────────────────────────────────────────────────────────
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Quote {
+  id            String      @id @default(cuid())
+  tenantId      String
+  number        String // ex: "ORC-2026-0001"
+  customerId    String
+  opportunityId String?
+  status        QuoteStatus @default(DRAFT)
+  // token público para o portal do cliente aprovar/recusar
+  publicToken   String      @unique @default(cuid())
+  currentVersion Int        @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer    Customer       @relation(fields: [customerId], references: [id])
+  opportunity Opportunity?   @relation(fields: [opportunityId], references: [id])
+  versions    QuoteVersion[]
+  items       QuoteItem[]
+  salesOrder  SalesOrder?
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model QuoteVersion {
+  id         String      @id @default(cuid())
+  tenantId   String
+  quoteId    String
+  version    Int
+  status     QuoteStatus @default(DRAFT)
+  subtotal   Decimal     @db.Decimal(12, 2)
+  discount   Decimal     @default(0) @db.Decimal(12, 2)
+  total      Decimal     @db.Decimal(12, 2)
+  notes      String?
+  // snapshot dos itens nesta versão
+  snapshot   Json
+  // decisão do cliente
+  decidedAt  DateTime?
+  decidedBy  String?
+  createdAt  DateTime    @default(now())
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, version])
+  @@index([tenantId])
+}
+
+model QuoteItem {
+  id          String  @id @default(cuid())
+  tenantId    String
+  quoteId     String
+  productId   String?
+  description String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(12, 2)
+  lineTotal   Decimal @db.Decimal(12, 2)
+
+  quote   Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([quoteId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Pedido (SalesOrder) e Ordem de produção (ProductionOrder)
+// ──────────────────────────────────────────────────────────────
+
+enum SalesOrderStatus {
+  CONFIRMED
+  IN_PRODUCTION
+  SHIPPED
+  CANCELLED
+}
+
+model SalesOrder {
+  id         String           @id @default(cuid())
+  tenantId   String
+  number     String // ex: "PED-2026-0001"
+  customerId String
+  quoteId    String?          @unique
+  status     SalesOrderStatus @default(CONFIRMED)
+  total      Decimal          @db.Decimal(12, 2)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  quote           Quote?           @relation(fields: [quoteId], references: [id])
+  items           SalesOrderItem[]
+  productionOrders ProductionOrder[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model SalesOrderItem {
+  id          String  @id @default(cuid())
+  tenantId    String
+  orderId     String
+  productId   String?
+  description String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(12, 2)
+  lineTotal   Decimal @db.Decimal(12, 2)
+
+  order   SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?   @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([orderId])
+}
+
+enum ProductionOrderStatus {
+  PLANNED
+  CUTTING
+  STITCHING
+  ASSEMBLY
+  FINISHING
+  DONE
+}
+
+model ProductionOrder {
+  id        String                @id @default(cuid())
+  tenantId  String
+  number    String // ex: "OP-2026-0001"
+  orderId   String
+  status    ProductionOrderStatus @default(PLANNED)
+  quantity  Int
+  notes     String?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order  SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Arquivos & notificações
+// ──────────────────────────────────────────────────────────────
+
+model File {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  url       String
+  mimeType  String?
+  size      Int?
+  // referência genérica
+  refModel  String?
+  refId     String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  title     String
+  body      String?
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, userId])
+}

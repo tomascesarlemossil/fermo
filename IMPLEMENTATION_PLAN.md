@@ -115,5 +115,39 @@ npm run build
 ## 8. Reaproveitamento imediato
 
 - **Site público:** já existe (projeto `fermo`, no ar). Portar para ler catálogo do banco.
-- **Telas de gestão (referência de UX):** kanban de produção, OPs, financeiro, relatórios e CMS já prototipados — reconstruir sobre Prisma/RBAC.
+- **Telas de gestão (referência de UX):** kanban de produção, OPs, financeiro, relatórios e CMS já prototipados — reconstruir sobre Prisma/RBAC. *(Protótipo preservado em `reference/fermo-plataforma.jsx`.)*
 - **Identidade visual:** espresso `#161009`, dourado `#C79A4B`, Cinzel + Cormorant + Inter.
+
+---
+
+## 9. Status de execução
+
+### ✅ Fase 0 — Fundação (concluída)
+- Projeto Next.js 14 (App Router) + TypeScript + Tailwind (identidade Fermo).
+- Prisma + PostgreSQL; schema do núcleo migrado (`prisma/migrations`).
+- **Multi-tenant** via Prisma Client Extension + `AsyncLocalStorage` (`tenantId`
+  resolvido pela sessão, nunca pelo front; operações sem contexto falham).
+- **RBAC** (`Role`/`Permission`, `can()`), **AuditLog** via Extension (before/after).
+- **Auth.js (NextAuth v5)** credenciais; layout administrativo com guarda de sessão.
+- Seed com 2 tenants e contas demo.
+- **Gate:** login funciona (verificado em runtime); teste de isolamento passa; build verde. ✔
+
+### ✅ Fase 1 — Espinha dorsal comercial (concluída)
+- Site público + **configurador** → **captura de lead** (`/api/leads`, tenant server-side).
+- **CRM**: leads, qualificação, conversão em cliente + oportunidade.
+- **Orçamento** com cálculo básico e versões (`QuoteVersion` + snapshot).
+- **Portal do cliente** (`/portal/<token>`): aprova/recusa sem login.
+- Aprovação **gera Pedido + Ordem de Produção** (transacional, idempotente).
+- Kanban de **Produção** por setor.
+- **Gate:** fluxo ponta a ponta com banco real; e2e do caminho feliz passa. ✔
+
+**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (8/8: isolamento + e2e) ✔ · `build` ✔
+
+### Próximas fases
+Fases 2–6 conforme planejado (PLM/BOM, MES, suprimentos/MRP, financeiro, IA/escala).
+
+> **Nota técnica (multi-tenant + tipos):** como a Extension injeta `tenantId` em
+> tempo de execução, os tipos gerados do Prisma ainda o exigem em `create`. As
+> chamadas de escrita usam `as any` no `data` (o `tenantId` real vem sempre do
+> contexto da sessão). Trade-off conhecido do padrão; o isolamento é garantido
+> pela Extension e coberto por teste automatizado.
