@@ -39,6 +39,10 @@ model Tenant {
   quotes           Quote[]
   salesOrders      SalesOrder[]
   productionOrders ProductionOrder[]
+  productionSteps  ProductionStep[]
+  productionEvents ProductionEvent[]
+  qualityInspections QualityInspection[]
+  qualityDefects   QualityDefect[]
   files            File[]
   notifications    Notification[]
 }
@@ -562,12 +566,126 @@ model ProductionOrder {
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
 
-  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  order  SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order       SalesOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  steps       ProductionStep[]
+  events      ProductionEvent[]
+  inspections QualityInspection[]
 
   @@unique([tenantId, number])
   @@index([tenantId])
   @@index([tenantId, status])
+}
+
+// ──────────────────────────────────────────────────────────────
+// MES / chão de fábrica (Fase 3) — roteiro, apontamento, qualidade
+// ──────────────────────────────────────────────────────────────
+
+enum ProductionStepStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model ProductionStep {
+  id                String               @id @default(cuid())
+  tenantId          String
+  productionOrderId String
+  sequence          Int
+  sector            String // Corte, Pesponto, Montagem, Acabamento, Expedição
+  status            ProductionStepStatus @default(PENDING)
+  qtyTarget         Int
+  qtyDone           Int                  @default(0)
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  productionOrder ProductionOrder   @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  events          ProductionEvent[]
+  inspections     QualityInspection[]
+
+  @@unique([productionOrderId, sequence])
+  @@index([tenantId])
+  @@index([productionOrderId])
+}
+
+enum ProductionEventType {
+  START
+  PRODUCE
+  PAUSE
+  COMPLETE
+}
+
+model ProductionEvent {
+  id                String              @id @default(cuid())
+  tenantId          String
+  productionOrderId String
+  stepId            String?
+  type              ProductionEventType
+  quantity          Int                 @default(0)
+  operator          String?
+  note              String?
+  // origem do apontamento: "qr", "admin"
+  source            String?
+  createdAt         DateTime            @default(now())
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  step            ProductionStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([productionOrderId])
+}
+
+enum QualityResult {
+  PASS
+  PARTIAL
+  FAIL
+}
+
+model QualityInspection {
+  id                String        @id @default(cuid())
+  tenantId          String
+  productionOrderId String
+  stepId            String?
+  inspector         String?
+  result            QualityResult
+  sampleSize        Int           @default(0)
+  approvedQty       Int           @default(0)
+  rejectedQty       Int           @default(0)
+  notes             String?
+  createdAt         DateTime      @default(now())
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  step            ProductionStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  defects         QualityDefect[]
+
+  @@index([tenantId])
+  @@index([productionOrderId])
+}
+
+enum DefectSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model QualityDefect {
+  id           String         @id @default(cuid())
+  tenantId     String
+  inspectionId String
+  type         String
+  quantity     Int            @default(1)
+  severity     DefectSeverity @default(LOW)
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inspection QualityInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([inspectionId])
 }
 
 // ──────────────────────────────────────────────────────────────

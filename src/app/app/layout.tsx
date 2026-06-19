@@ -13,6 +13,7 @@ const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
   { href: "/app/quotes", label: "Orçamentos", icon: "quotes", perm: "quote:read" },
   { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read" },
   { href: "/app/production", label: "Produção", icon: "production", perm: "production:read" },
+  { href: "/app/quality", label: "Qualidade", icon: "quality", perm: "quality:read" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

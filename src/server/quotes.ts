@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { runWithTenant } from "@/lib/tenant-context";
 import { z } from "zod";
 import { nextNumber } from "./numbering";
+import { generateRouteForOrder } from "./mes";
 
 /**
  * Orçamento (Quote) com versões + aprovação no portal do cliente, que gera
@@ -163,6 +164,11 @@ async function generateOrderFromQuote(quoteId: string, decidedBy?: string) {
       include: { items: true, productionOrders: true },
     });
   });
+
+  // Gera o roteiro de produção (MES) da OP recém-criada.
+  for (const op of order.productionOrders) {
+    await generateRouteForOrder(op.id);
+  }
 
   await prisma.notification.create({
     data: {

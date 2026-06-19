@@ -12,6 +12,7 @@ import {
   Factory,
   Boxes,
   Layers,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -29,6 +30,7 @@ const ICONS: Record<string, LucideIcon> = {
   quotes: FileText,
   orders: ClipboardList,
   production: Factory,
+  quality: ShieldCheck,
 };
 
 function NavLinks({

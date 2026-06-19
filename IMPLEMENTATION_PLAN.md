@@ -154,15 +154,30 @@ npm run build
 - Novos modelos entram na proteção multi-tenant e na auditoria.
 - **Gate:** migrate + isolamento + BOM/ficha cobertos por teste; build verde. ✔
 
+### ✅ Fase 3 — Produção (PCP/MES) (concluída)
+- **Roteiro detalhado da OP** (`ProductionStep`) por setor (Corte, Pesponto,
+  Montagem, Acabamento, Expedição), gerado automaticamente na aprovação do orçamento.
+- **Apontamento de produção** (`ProductionEvent`): soma pares por etapa, evolui o
+  status da etapa (Pendente→Em produção→Concluído) e **recalcula o status macro da
+  OP e do pedido** (em produção / expedido).
+- **QR Code** por OP (gerado no servidor) apontando para a tela de apontamento —
+  uso no chão de fábrica.
+- **Qualidade**: inspeções (`QualityInspection`) com aprovados/reprovados, resultado
+  automático (PASS/PARTIAL/FAIL) e **defeitos** (`QualityDefect`) com severidade.
+  Visão consolidada em `/app/quality`.
+- Novos modelos protegidos pela extension multi-tenant e auditoria; RBAC
+  `quality:read/write`.
+- **Gate:** roteiro/apontamento/qualidade cobertos por teste; build verde. ✔
+
 ### 🎨 UX/Mobile
 - Layout administrativo refeito para mobile: sidebar vira **drawer** com
   hambúrguer; cabeçalho fixo só no desktop; padding responsivo; tabelas com
   rolagem horizontal. (Antes a sidebar fixa espremia o conteúdo no celular.)
 
-**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (10/10: isolamento + e2e + BOM/ficha técnica) ✔ · `build` ✔
+**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (14/14: isolamento + e2e + BOM/ficha + MES/qualidade) ✔ · `build` ✔
 
 ### Próximas fases
-Fases 3–6 conforme planejado (MES, suprimentos/MRP, financeiro, IA/escala).
+Fases 4–6 conforme planejado (suprimentos/MRP, financeiro, IA/escala).
 
 > **Nota técnica (multi-tenant + tipos):** como a Extension injeta `tenantId` em
 > tempo de execução, os tipos gerados do Prisma ainda o exigem em `create`. As

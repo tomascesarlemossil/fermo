@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { withSession } from "@/lib/session";
 import { getSession } from "@/lib/session";
 import { listProductionOrders, PRODUCTION_STATUSES } from "@/server/orders";
@@ -35,7 +36,9 @@ export default async function ProductionPage() {
                 <div className="space-y-3">
                   {cards.map((op) => (
                     <div key={op.id} className="card p-4">
-                      <div className="font-mono text-xs text-muted">{op.number}</div>
+                      <Link href={`/app/production/${op.id}`} className="font-mono text-xs text-sela hover:underline">
+                        {op.number}
+                      </Link>
                       <div className="font-medium mt-1">{op.order.customer.name}</div>
                       <div className="text-sm text-muted">{op.quantity} pares</div>
                       {writable && (

@@ -8,6 +8,8 @@ Stack full-stack Next.js com banco real, multi-tenant, RBAC e auditoria.
 > - **Fase 1** — site → lead → CRM → orçamento → portal do cliente → pedido → ordem de produção.
 > - **Fase 2** — catálogo, variantes, materiais, **ficha técnica versionada**, **BOM multinível**
 >   (com explosão e custo) e **configurador data-driven** no site.
+> - **Fase 3** — MES: **roteiro** da OP por setor, **apontamento** (com **QR Code**) e
+>   **qualidade** (inspeções + defeitos).
 
 ## Stack
 
@@ -82,13 +84,21 @@ provar o isolamento multi-tenant.
 - **Materiais** (`/app/materials`): insumos com custo por unidade, usados na BOM.
 - O **configurador** (`/configurador`) lista os modelos a partir do catálogo do tenant.
 
+### Produção / MES (Fase 3)
+
+- Ao aprovar um orçamento, a OP nasce com **roteiro por setor** (Corte → Expedição).
+- Em **Produção** (`/app/production`), abra uma OP para ver o roteiro, **apontar pares**
+  por etapa (avança o status da OP e do pedido) e o **QR Code** do chão de fábrica.
+- **Qualidade** (`/app/quality`): inspeções com aprovados/reprovados, resultado
+  automático (PASS/PARTIAL/FAIL) e defeitos.
+
 ## Validação (rodar a cada etapa)
 
 ```bash
 npx prisma migrate dev
 npm run lint
 npm run typecheck
-npm run test     # isolamento multi-tenant + e2e + BOM/ficha técnica
+npm run test     # isolamento + e2e + BOM/ficha + MES/qualidade
 npm run build
 ```
 
