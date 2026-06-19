@@ -3,6 +3,7 @@ import { runWithTenant } from "@/lib/tenant-context";
 import { z } from "zod";
 import { nextNumber } from "./numbering";
 import { generateRouteForOrder } from "./mes";
+import { runAutomations } from "./automations";
 
 /**
  * Orçamento (Quote) com versões + aprovação no portal do cliente, que gera
@@ -199,7 +200,10 @@ export async function decideQuote(
   await prisma.quote.update({ where: { id: quoteId }, data: { status: decision } });
 
   if (decision === "APPROVED") {
-    return generateOrderFromQuote(quoteId, decidedBy);
+    const order = await generateOrderFromQuote(quoteId, decidedBy);
+    await runAutomations("quote.approved", { number: quote.number, link: `/app/orders/${order.id}` });
+    await runAutomations("order.created", { number: order.number, link: `/app/orders/${order.id}` });
+    return order;
   }
   return null;
 }

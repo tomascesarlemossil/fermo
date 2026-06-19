@@ -233,6 +233,21 @@ async function seedTenantFermo() {
     customerId: customer.id,
   });
 
+  // Automação de exemplo (Fase 6)
+  const ruleExists = await prisma.automationRule.findFirst({ where: { tenantId: t, trigger: "lead.created" } });
+  if (!ruleExists) {
+    await prisma.automationRule.create({
+      data: {
+        tenantId: t,
+        name: "Avisar novo lead",
+        trigger: "lead.created",
+        action: "notify",
+        params: { title: "Novo lead: {name}", body: "Empresa {company}" },
+        active: true,
+      },
+    });
+  }
+
   // Lead de exemplo (vindo do site)
   await prisma.lead.upsert({
     where: { id: `${t}-lead-demo` },

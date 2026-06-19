@@ -51,6 +51,7 @@ model Tenant {
   financialEntries FinancialEntry[]
   invoices         Invoice[]
   shipments        Shipment[]
+  automationRules  AutomationRule[]
   files            File[]
   notifications    Notification[]
 }
@@ -909,6 +910,27 @@ model Shipment {
   salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Automações configuráveis (Fase 6)
+// ──────────────────────────────────────────────────────────────
+
+model AutomationRule {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  trigger   String // ex.: "lead.created", "quote.approved"
+  action    String // ex.: "notify"
+  params    Json? // ex.: { title, body, link }
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, trigger])
 }
 
 // ──────────────────────────────────────────────────────────────

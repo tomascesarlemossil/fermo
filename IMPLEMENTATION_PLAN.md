@@ -169,15 +169,43 @@ npm run build
   `quality:read/write`.
 - **Gate:** roteiro/apontamento/qualidade cobertos por teste; build verde. ✔
 
+### ✅ Fase 4 — Suprimentos (concluída)
+- **Fornecedores** (material e facção). **Estoque** com razão de movimentos
+  (IN/OUT/RESERVE/RELEASE/ADJUST) + saldo/reserva/disponível.
+- **Compras**: criar/enviar/receber PO; recebimento dá **entrada no estoque**.
+- **MRP**: explode a BOM dos pedidos ativos, subtrai estoque e sugere compra.
+- **Portal da facção** (token público) para PO terceirizada.
+- Orçamento passou a permitir vincular **produto por linha** (alimenta o MRP).
+- **Gate:** estoque/recebimento/MRP cobertos por teste; build verde. ✔
+
+### ✅ Fase 5 — Financeiro & Logística (concluída)
+- **Contas a pagar/receber** com baixa; vencido derivado; **fluxo de caixa** mensal.
+- **Faturamento** (NF) gera a receber; **comissões** como conta a pagar.
+- **Custos**: orçado (BOM) × receita com **margem** no detalhe do pedido.
+- **Regra de bloqueio**: cliente inadimplente não expede.
+- **Expedição** com transportadora/rastreio (marca pedido como SHIPPED).
+- **Gate:** faturamento/comissão/custo/bloqueio/expedição testados; build verde. ✔
+
+### ✅ Fase 6 — Inteligência & escala (concluída no que agrega valor agora)
+- **Relatórios** com gráficos (funil comercial, produção, fluxo de caixa, top clientes).
+- **Automações configuráveis** (gatilho → ação "notify"), disparadas nos eventos
+  de negócio (lead criado, orçamento aprovado, pedido criado).
+- **Assistente (IA heurística, sem API externa)**: estimativa de preço (BOM × markup)
+  e **detecção de anomalias** (margem baixa, inadimplência, OP parada).
+- **PWA**: manifest + theme/ícone (instalável). *Service worker offline, Docker/filas
+  e configurador 3D ficam para quando o volume exigir (conforme D2/plano).* 
+- **Gate:** estimativa/anomalias/automação testados; build verde. ✔
+
 ### 🎨 UX/Mobile
 - Layout administrativo refeito para mobile: sidebar vira **drawer** com
   hambúrguer; cabeçalho fixo só no desktop; padding responsivo; tabelas com
   rolagem horizontal. (Antes a sidebar fixa espremia o conteúdo no celular.)
 
-**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (14/14: isolamento + e2e + BOM/ficha + MES/qualidade) ✔ · `build` ✔
+**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (25/25) ✔ · `build` ✔ (37 rotas)
 
-### Próximas fases
-Fases 4–6 conforme planejado (suprimentos/MRP, financeiro, IA/escala).
+### Itens deferidos (escala — D2)
+Service worker offline completo, Docker/Redis/BullMQ, S3/Blob dedicado e
+configurador 3D entram quando o volume justificar.
 
 > **Nota técnica (multi-tenant + tipos):** como a Extension injeta `tenantId` em
 > tempo de execução, os tipos gerados do Prisma ainda o exigem em `create`. As

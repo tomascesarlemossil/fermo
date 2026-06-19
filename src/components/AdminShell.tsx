@@ -20,6 +20,9 @@ import {
   Wallet,
   Receipt,
   Send,
+  BarChart3,
+  Sparkles,
+  Zap,
   LogOut,
   Menu,
   X,
@@ -45,6 +48,9 @@ const ICONS: Record<string, LucideIcon> = {
   finance: Wallet,
   invoices: Receipt,
   shipping: Send,
+  reports: BarChart3,
+  insights: Sparkles,
+  automations: Zap,
 };
 
 function NavLinks({

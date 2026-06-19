@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { runWithTenant } from "@/lib/tenant-context";
 import { z } from "zod";
+import { runAutomations } from "./automations";
 
 /**
  * CRM — captura de lead (site público), pipeline e conversão em cliente.
@@ -65,6 +66,12 @@ export async function captureLeadForTenant(slug: string, input: LeadInput) {
           body: `${data.name}${data.company ? ` — ${data.company}` : ""}`,
           link: `/app/crm/leads/${lead.id}`,
         } as any,
+      });
+
+      await runAutomations("lead.created", {
+        name: data.name,
+        company: data.company ?? "",
+        link: `/app/crm/leads/${lead.id}`,
       });
 
       return lead;

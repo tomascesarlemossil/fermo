@@ -42,6 +42,7 @@ export const TENANT_MODELS = new Set<string>([
   "FinancialEntry",
   "Invoice",
   "Shipment",
+  "AutomationRule",
   "File",
   "Notification",
 ]);

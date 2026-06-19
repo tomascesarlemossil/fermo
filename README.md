@@ -10,6 +10,12 @@ Stack full-stack Next.js com banco real, multi-tenant, RBAC e auditoria.
 >   (com explosão e custo) e **configurador data-driven** no site.
 > - **Fase 3** — MES: **roteiro** da OP por setor, **apontamento** (com **QR Code**) e
 >   **qualidade** (inspeções + defeitos).
+> - **Fase 4** — Suprimentos: **fornecedores**, **estoque**, **compras**, **MRP**
+>   (a partir da BOM) e **portal da facção**.
+> - **Fase 5** — Financeiro & Logística: **contas a pagar/receber**, fluxo de caixa,
+>   **faturamento**, comissões, custos (orçado×receita), **expedição** e bloqueio por inadimplência.
+> - **Fase 6** — Inteligência: **relatórios** com gráficos, **automações** configuráveis,
+>   **assistente** (estimativa de preço + anomalias) e **PWA** (instalável).
 
 ## Stack
 
@@ -98,7 +104,7 @@ provar o isolamento multi-tenant.
 npx prisma migrate dev
 npm run lint
 npm run typecheck
-npm run test     # isolamento + e2e + BOM/ficha + MES/qualidade
+npm run test     # 25 testes: isolamento + e2e + PLM + MES + suprimentos + financeiro + IA
 npm run build
 ```
 

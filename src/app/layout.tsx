@@ -5,6 +5,12 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Fermo · Private Label Shoes",
   description: "Fábrica de calçados em couro sob encomenda — Franca/SP.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg" },
+};
+
+export const viewport = {
+  themeColor: "#161009",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
