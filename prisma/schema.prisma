@@ -30,6 +30,11 @@ model Tenant {
   opportunities    Opportunity[]
   products         Product[]
   sizeGrids        SizeGrid[]
+  materials        Material[]
+  productVariants  ProductVariant[]
+  techSheets       TechSheet[]
+  techSheetVersions TechSheetVersion[]
+  bomItems         BomItem[]
   configRequests   ConfigRequest[]
   quotes           Quote[]
   salesOrders      SalesOrder[]
@@ -268,8 +273,118 @@ model Product {
   quoteItems QuoteItem[]
   orderItems SalesOrderItem[]
 
+  // PLM (Fase 2)
+  variants   ProductVariant[]
+  techSheets TechSheet[]
+  bomItems   BomItem[]        @relation("ProductBom")          // itens da BOM deste produto
+  usedInBom  BomItem[]        @relation("ProductBomComponent") // onde este produto é subcomponente
+
   @@unique([tenantId, sku])
   @@index([tenantId])
+}
+
+// ──────────────────────────────────────────────────────────────
+// PLM — materiais, variantes, ficha técnica versionada, BOM multinível
+// ──────────────────────────────────────────────────────────────
+
+model Material {
+  id          String   @id @default(cuid())
+  tenantId    String
+  code        String
+  name        String
+  category    String? // ex: "couro", "solado", "forro", "aviamento"
+  unit        String   @default("un") // un, par, m2, kg, m
+  costPerUnit Decimal  @default(0) @db.Decimal(12, 4)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bomItems BomItem[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  tenantId   String
+  productId  String
+  sku        String
+  name       String // ex: "Preto / Couro liso"
+  color      String?
+  attributes Json? // { couro: "liso", cor: "preto", solado: "borracha" }
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+  @@index([productId])
+}
+
+model TechSheet {
+  id             String   @id @default(cuid())
+  tenantId       String
+  productId      String
+  currentVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product  Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  versions TechSheetVersion[]
+
+  @@unique([tenantId, productId])
+  @@index([tenantId])
+}
+
+model TechSheetVersion {
+  id          String   @id @default(cuid())
+  tenantId    String
+  techSheetId String
+  version     Int
+  title       String?
+  // ficha técnica: especificações, roteiro de etapas, consumo, observações
+  content     Json
+  notes       String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  techSheet TechSheet @relation(fields: [techSheetId], references: [id], onDelete: Cascade)
+
+  @@unique([techSheetId, version])
+  @@index([tenantId])
+}
+
+enum BomComponentType {
+  MATERIAL
+  PRODUCT
+}
+
+model BomItem {
+  id        String           @id @default(cuid())
+  tenantId  String
+  productId String // produto/montagem dono desta linha de BOM
+  type      BomComponentType
+  // exatamente um dos dois é preenchido conforme `type`
+  componentMaterialId String?
+  componentProductId  String?
+  quantity  Decimal          @default(1) @db.Decimal(12, 4)
+  unit      String           @default("un")
+  note      String?
+  createdAt DateTime         @default(now())
+
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product           Product   @relation("ProductBom", fields: [productId], references: [id], onDelete: Cascade)
+  componentMaterial Material? @relation(fields: [componentMaterialId], references: [id])
+  componentProduct  Product?  @relation("ProductBomComponent", fields: [componentProductId], references: [id])
+
+  @@index([tenantId])
+  @@index([productId])
 }
 
 model SizeGrid {

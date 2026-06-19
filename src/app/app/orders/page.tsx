@@ -16,11 +16,11 @@ export default async function OrdersPage() {
   return (
     <>
       <PageHeader title="Pedidos" subtitle="Gerados a partir de orçamentos aprovados." />
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {orders.length === 0 ? (
           <EmptyState>Nenhum pedido ainda. Aprove um orçamento para gerar.</EmptyState>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-osso text-muted text-xs uppercase tracking-wide">
                 <tr>

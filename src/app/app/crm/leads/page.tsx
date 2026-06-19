@@ -24,11 +24,11 @@ export default async function LeadsPage() {
   return (
     <>
       <PageHeader title="Leads" subtitle="Captura do site e configurador." />
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {leads.length === 0 ? (
           <EmptyState>Nenhum lead capturado ainda.</EmptyState>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-osso text-muted text-xs uppercase tracking-wide">
                 <tr>

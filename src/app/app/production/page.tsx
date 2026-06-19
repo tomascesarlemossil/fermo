@@ -22,7 +22,7 @@ export default async function ProductionPage() {
   return (
     <>
       <PageHeader title="Produção" subtitle="Kanban por setor — ordens de produção." />
-      <div className="p-7 overflow-x-auto">
+      <div className="p-4 sm:p-7 overflow-x-auto">
         <div className="flex gap-4 min-w-max">
           {PRODUCTION_STATUSES.map((status) => {
             const cards = ops.filter((o) => o.status === status);

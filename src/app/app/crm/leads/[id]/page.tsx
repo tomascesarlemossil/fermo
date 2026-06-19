@@ -24,7 +24,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           </Link>
         }
       />
-      <div className="p-7 grid lg:grid-cols-3 gap-6">
+      <div className="p-4 sm:p-7 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="card p-6">
             <h2 className="font-cormorant text-xl mb-4">Contato</h2>

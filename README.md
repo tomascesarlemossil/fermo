@@ -3,9 +3,11 @@
 Plataforma SaaS para fábrica de calçados em couro **sob encomenda** (private label, Franca/SP).
 Stack full-stack Next.js com banco real, multi-tenant, RBAC e auditoria.
 
-> Esta versão implementa a **Fase 0 (Fundação)** + a **Fase 1 (espinha dorsal comercial)**
-> do [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md): site → lead → CRM → orçamento →
-> aprovação no portal do cliente → pedido → ordem de produção.
+> Esta versão implementa as **Fases 0–2** do [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md):
+> - **Fase 0** — fundação multi-tenant + RBAC + auditoria + Auth.js.
+> - **Fase 1** — site → lead → CRM → orçamento → portal do cliente → pedido → ordem de produção.
+> - **Fase 2** — catálogo, variantes, materiais, **ficha técnica versionada**, **BOM multinível**
+>   (com explosão e custo) e **configurador data-driven** no site.
 
 ## Stack
 
@@ -72,13 +74,21 @@ provar o isolamento multi-tenant.
 5. O cliente **aprova** no portal → o sistema gera **pedido** + **ordem de produção**.
 6. A OP aparece no kanban de **Produção** (`/app/production`).
 
+### PLM (Fase 2)
+
+- **Catálogo** (`/app/catalog`): produtos, variantes, grade. No detalhe do produto:
+  **BOM multinível** (materiais e submontagens) com **explosão + custo por par**, e
+  **ficha técnica versionada** (cada salvamento gera nova versão imutável).
+- **Materiais** (`/app/materials`): insumos com custo por unidade, usados na BOM.
+- O **configurador** (`/configurador`) lista os modelos a partir do catálogo do tenant.
+
 ## Validação (rodar a cada etapa)
 
 ```bash
 npx prisma migrate dev
 npm run lint
 npm run typecheck
-npm run test     # isolamento multi-tenant + e2e do caminho feliz
+npm run test     # isolamento multi-tenant + e2e + BOM/ficha técnica
 npm run build
 ```
 

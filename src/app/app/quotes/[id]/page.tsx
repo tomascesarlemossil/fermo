@@ -37,9 +37,9 @@ export default async function QuoteDetail({ params }: { params: { id: string } }
           </div>
         }
       />
-      <div className="p-7 grid lg:grid-cols-3 gap-6">
+      <div className="p-4 sm:p-7 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-osso text-muted text-xs uppercase tracking-wide">
                 <tr>

@@ -97,7 +97,7 @@ async function seedTenantFermo() {
     create: { id: `${t}-grid-fem`, tenantId: t, name: "Feminino 33–40", sizes: [33, 34, 35, 36, 37, 38, 39, 40] },
   });
 
-  await prisma.product.upsert({
+  const mocassim = await prisma.product.upsert({
     where: { tenantId_sku: { tenantId: t, sku: "MOC-001" } },
     update: {},
     create: { tenantId: t, sku: "MOC-001", name: "Mocassim em couro", basePrice: 189.9, sizeGridId: grid.id },
@@ -107,6 +107,84 @@ async function seedTenantFermo() {
     update: {},
     create: { tenantId: t, sku: "SCR-001", name: "Scarpin clássico", basePrice: 219.9, sizeGridId: grid.id },
   });
+
+  // ── PLM (Fase 2): materiais, variante, BOM e ficha técnica ──
+  const materials = [
+    { code: "COURO-LISO", name: "Couro liso", category: "couro", unit: "m2", costPerUnit: 38.5 },
+    { code: "FORRO-BEGE", name: "Forro bege", category: "forro", unit: "m2", costPerUnit: 12.0 },
+    { code: "SOLADO-BORR", name: "Solado borracha", category: "solado", unit: "par", costPerUnit: 22.0 },
+    { code: "PALMILHA", name: "Palmilha montagem", category: "aviamento", unit: "par", costPerUnit: 6.5 },
+    { code: "COLA-PU", name: "Cola PU", category: "aviamento", unit: "kg", costPerUnit: 45.0 },
+  ];
+  const matIds: Record<string, string> = {};
+  for (const m of materials) {
+    const row = await prisma.material.upsert({
+      where: { tenantId_code: { tenantId: t, code: m.code } },
+      update: { name: m.name, category: m.category, unit: m.unit, costPerUnit: m.costPerUnit },
+      create: { tenantId: t, ...m },
+    });
+    matIds[m.code] = row.id;
+  }
+
+  await prisma.productVariant.upsert({
+    where: { tenantId_sku: { tenantId: t, sku: "MOC-001-PRETO" } },
+    update: {},
+    create: {
+      tenantId: t,
+      productId: mocassim.id,
+      sku: "MOC-001-PRETO",
+      name: "Preto / Couro liso",
+      color: "Preto",
+      attributes: { couro: "liso", cor: "preto", solado: "borracha" },
+    },
+  });
+
+  // BOM do mocassim (por par)
+  const bom = [
+    { code: "COURO-LISO", quantity: 0.18, unit: "m2" },
+    { code: "FORRO-BEGE", quantity: 0.15, unit: "m2" },
+    { code: "SOLADO-BORR", quantity: 1, unit: "par" },
+    { code: "PALMILHA", quantity: 1, unit: "par" },
+    { code: "COLA-PU", quantity: 0.05, unit: "kg" },
+  ];
+  const existingBom = await prisma.bomItem.count({ where: { productId: mocassim.id } });
+  if (existingBom === 0) {
+    for (const b of bom) {
+      await prisma.bomItem.create({
+        data: {
+          tenantId: t,
+          productId: mocassim.id,
+          type: "MATERIAL",
+          componentMaterialId: matIds[b.code],
+          quantity: b.quantity,
+          unit: b.unit,
+        },
+      });
+    }
+  }
+
+  // Ficha técnica (versão 1)
+  const sheet = await prisma.techSheet.upsert({
+    where: { tenantId_productId: { tenantId: t, productId: mocassim.id } },
+    update: {},
+    create: { tenantId: t, productId: mocassim.id, currentVersion: 0 },
+  });
+  if (sheet.currentVersion === 0) {
+    await prisma.techSheetVersion.create({
+      data: {
+        tenantId: t,
+        techSheetId: sheet.id,
+        version: 1,
+        title: "Ficha técnica inicial",
+        content: {
+          specs: { Forma: "AB-12", Salto: "2cm", Costura: "Manual" },
+          steps: ["Corte", "Pesponto", "Montagem", "Acabamento"],
+          observations: "Couro selecionado; conferir tonalidade do lote.",
+        },
+      },
+    });
+    await prisma.techSheet.update({ where: { id: sheet.id }, data: { currentVersion: 1 } });
+  }
 
   const customer = await prisma.customer.upsert({
     where: { id: `${t}-cust-demo` },

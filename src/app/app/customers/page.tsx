@@ -17,7 +17,7 @@ export default async function CustomersPage() {
           </Link>
         }
       />
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {customers.length === 0 ? (
           <EmptyState>Nenhum cliente. Converta um lead para começar.</EmptyState>
         ) : (

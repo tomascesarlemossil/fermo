@@ -2,12 +2,14 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { signOut } from "@/lib/auth";
 import { can, type PermissionKey } from "@/lib/rbac";
-import { Sidebar, type NavItem } from "@/components/Sidebar";
+import { AdminShell, type NavItem } from "@/components/AdminShell";
 
 const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
   { href: "/app", label: "Painel", icon: "dashboard" },
   { href: "/app/crm/leads", label: "Leads", icon: "leads", perm: "lead:read" },
   { href: "/app/customers", label: "Clientes", icon: "customers", perm: "customer:read" },
+  { href: "/app/catalog", label: "Catálogo", icon: "catalog", perm: "product:read" },
+  { href: "/app/materials", label: "Materiais", icon: "materials", perm: "material:read" },
   { href: "/app/quotes", label: "Orçamentos", icon: "quotes", perm: "quote:read" },
   { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read" },
   { href: "/app/production", label: "Produção", icon: "production", perm: "production:read" },
@@ -27,9 +29,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-bone">
-      <Sidebar items={items} user={{ name: session.name, roleKey: session.roleKey }} logout={logout} />
-      <main className="flex-1 min-w-0">{children}</main>
-    </div>
+    <AdminShell items={items} user={{ name: session.name, roleKey: session.roleKey }} logout={logout}>
+      {children}
+    </AdminShell>
   );
 }

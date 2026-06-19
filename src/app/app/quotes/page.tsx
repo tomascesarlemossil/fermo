@@ -25,11 +25,11 @@ export default async function QuotesPage() {
           </Link>
         }
       />
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {quotes.length === 0 ? (
           <EmptyState>Nenhum orçamento ainda.</EmptyState>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-osso text-muted text-xs uppercase tracking-wide">
                 <tr>

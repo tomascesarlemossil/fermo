@@ -19,8 +19,8 @@ export default async function OrderDetail({ params }: { params: { id: string } }
           </Link>
         }
       />
-      <div className="p-7 grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 card overflow-hidden">
+      <div className="p-4 sm:p-7 grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-osso text-muted text-xs uppercase tracking-wide">
               <tr>

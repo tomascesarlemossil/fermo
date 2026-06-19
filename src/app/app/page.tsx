@@ -32,7 +32,7 @@ export default async function Painel() {
   return (
     <>
       <PageHeader title="Painel" subtitle="Visão geral da operação comercial." />
-      <div className="p-7 space-y-7">
+      <div className="p-4 sm:p-7 space-y-7">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {cards.map((c) => (
             <Link key={c.label} href={c.href} className="card p-5 hover:border-gold transition-colors">

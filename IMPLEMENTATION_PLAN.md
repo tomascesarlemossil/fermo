@@ -141,10 +141,28 @@ npm run build
 - Kanban de **Produção** por setor.
 - **Gate:** fluxo ponta a ponta com banco real; e2e do caminho feliz passa. ✔
 
-**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (8/8: isolamento + e2e) ✔ · `build` ✔
+### ✅ Fase 2 — Produto, Ficha Técnica, BOM, Grade, Configurador (concluída)
+- **Catálogo** de produtos (CRUD) com preço base e grade de numeração.
+- **Variantes** de produto (cor/atributos).
+- **Materiais** (insumos) com custo por unidade.
+- **Ficha técnica versionada** (`TechSheet`/`TechSheetVersion`): cada salvamento
+  cria uma nova versão imutável; histórico preservado.
+- **BOM multinível** (`BomItem`): componentes de material **ou** subprodutos
+  (montagens). Explosão recursiva com **rollup de custo** e proteção a ciclos.
+- **Configurador do site agora é data-driven**: os modelos vêm do catálogo real
+  do tenant e o resultado alimenta o CRM (lead + `ConfigRequest`).
+- Novos modelos entram na proteção multi-tenant e na auditoria.
+- **Gate:** migrate + isolamento + BOM/ficha cobertos por teste; build verde. ✔
+
+### 🎨 UX/Mobile
+- Layout administrativo refeito para mobile: sidebar vira **drawer** com
+  hambúrguer; cabeçalho fixo só no desktop; padding responsivo; tabelas com
+  rolagem horizontal. (Antes a sidebar fixa espremia o conteúdo no celular.)
+
+**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (10/10: isolamento + e2e + BOM/ficha técnica) ✔ · `build` ✔
 
 ### Próximas fases
-Fases 2–6 conforme planejado (PLM/BOM, MES, suprimentos/MRP, financeiro, IA/escala).
+Fases 3–6 conforme planejado (MES, suprimentos/MRP, financeiro, IA/escala).
 
 > **Nota técnica (multi-tenant + tipos):** como a Extension injeta `tenantId` em
 > tempo de execução, os tipos gerados do Prisma ainda o exigem em `create`. As

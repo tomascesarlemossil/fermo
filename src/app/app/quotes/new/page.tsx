@@ -18,7 +18,7 @@ export default async function NewQuotePage() {
           </Link>
         }
       />
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {customers.length === 0 ? (
           <EmptyState>
             Você precisa de um cliente. Converta um lead em{" "}
