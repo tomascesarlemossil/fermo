@@ -1,0 +1,17 @@
+{
+  "name": "Fermo · Plataforma",
+  "short_name": "Fermo",
+  "description": "Fábrica de calçados em couro sob encomenda — gestão de ponta a ponta.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#161009",
+  "theme_color": "#161009",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

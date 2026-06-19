@@ -115,5 +115,100 @@ npm run build
 ## 8. Reaproveitamento imediato
 
 - **Site público:** já existe (projeto `fermo`, no ar). Portar para ler catálogo do banco.
-- **Telas de gestão (referência de UX):** kanban de produção, OPs, financeiro, relatórios e CMS já prototipados — reconstruir sobre Prisma/RBAC.
+- **Telas de gestão (referência de UX):** kanban de produção, OPs, financeiro, relatórios e CMS já prototipados — reconstruir sobre Prisma/RBAC. *(Protótipo preservado em `reference/fermo-plataforma.jsx`.)*
 - **Identidade visual:** espresso `#161009`, dourado `#C79A4B`, Cinzel + Cormorant + Inter.
+
+---
+
+## 9. Status de execução
+
+### ✅ Fase 0 — Fundação (concluída)
+- Projeto Next.js 14 (App Router) + TypeScript + Tailwind (identidade Fermo).
+- Prisma + PostgreSQL; schema do núcleo migrado (`prisma/migrations`).
+- **Multi-tenant** via Prisma Client Extension + `AsyncLocalStorage` (`tenantId`
+  resolvido pela sessão, nunca pelo front; operações sem contexto falham).
+- **RBAC** (`Role`/`Permission`, `can()`), **AuditLog** via Extension (before/after).
+- **Auth.js (NextAuth v5)** credenciais; layout administrativo com guarda de sessão.
+- Seed com 2 tenants e contas demo.
+- **Gate:** login funciona (verificado em runtime); teste de isolamento passa; build verde. ✔
+
+### ✅ Fase 1 — Espinha dorsal comercial (concluída)
+- Site público + **configurador** → **captura de lead** (`/api/leads`, tenant server-side).
+- **CRM**: leads, qualificação, conversão em cliente + oportunidade.
+- **Orçamento** com cálculo básico e versões (`QuoteVersion` + snapshot).
+- **Portal do cliente** (`/portal/<token>`): aprova/recusa sem login.
+- Aprovação **gera Pedido + Ordem de Produção** (transacional, idempotente).
+- Kanban de **Produção** por setor.
+- **Gate:** fluxo ponta a ponta com banco real; e2e do caminho feliz passa. ✔
+
+### ✅ Fase 2 — Produto, Ficha Técnica, BOM, Grade, Configurador (concluída)
+- **Catálogo** de produtos (CRUD) com preço base e grade de numeração.
+- **Variantes** de produto (cor/atributos).
+- **Materiais** (insumos) com custo por unidade.
+- **Ficha técnica versionada** (`TechSheet`/`TechSheetVersion`): cada salvamento
+  cria uma nova versão imutável; histórico preservado.
+- **BOM multinível** (`BomItem`): componentes de material **ou** subprodutos
+  (montagens). Explosão recursiva com **rollup de custo** e proteção a ciclos.
+- **Configurador do site agora é data-driven**: os modelos vêm do catálogo real
+  do tenant e o resultado alimenta o CRM (lead + `ConfigRequest`).
+- Novos modelos entram na proteção multi-tenant e na auditoria.
+- **Gate:** migrate + isolamento + BOM/ficha cobertos por teste; build verde. ✔
+
+### ✅ Fase 3 — Produção (PCP/MES) (concluída)
+- **Roteiro detalhado da OP** (`ProductionStep`) por setor (Corte, Pesponto,
+  Montagem, Acabamento, Expedição), gerado automaticamente na aprovação do orçamento.
+- **Apontamento de produção** (`ProductionEvent`): soma pares por etapa, evolui o
+  status da etapa (Pendente→Em produção→Concluído) e **recalcula o status macro da
+  OP e do pedido** (em produção / expedido).
+- **QR Code** por OP (gerado no servidor) apontando para a tela de apontamento —
+  uso no chão de fábrica.
+- **Qualidade**: inspeções (`QualityInspection`) com aprovados/reprovados, resultado
+  automático (PASS/PARTIAL/FAIL) e **defeitos** (`QualityDefect`) com severidade.
+  Visão consolidada em `/app/quality`.
+- Novos modelos protegidos pela extension multi-tenant e auditoria; RBAC
+  `quality:read/write`.
+- **Gate:** roteiro/apontamento/qualidade cobertos por teste; build verde. ✔
+
+### ✅ Fase 4 — Suprimentos (concluída)
+- **Fornecedores** (material e facção). **Estoque** com razão de movimentos
+  (IN/OUT/RESERVE/RELEASE/ADJUST) + saldo/reserva/disponível.
+- **Compras**: criar/enviar/receber PO; recebimento dá **entrada no estoque**.
+- **MRP**: explode a BOM dos pedidos ativos, subtrai estoque e sugere compra.
+- **Portal da facção** (token público) para PO terceirizada.
+- Orçamento passou a permitir vincular **produto por linha** (alimenta o MRP).
+- **Gate:** estoque/recebimento/MRP cobertos por teste; build verde. ✔
+
+### ✅ Fase 5 — Financeiro & Logística (concluída)
+- **Contas a pagar/receber** com baixa; vencido derivado; **fluxo de caixa** mensal.
+- **Faturamento** (NF) gera a receber; **comissões** como conta a pagar.
+- **Custos**: orçado (BOM) × receita com **margem** no detalhe do pedido.
+- **Regra de bloqueio**: cliente inadimplente não expede.
+- **Expedição** com transportadora/rastreio (marca pedido como SHIPPED).
+- **Gate:** faturamento/comissão/custo/bloqueio/expedição testados; build verde. ✔
+
+### ✅ Fase 6 — Inteligência & escala (concluída no que agrega valor agora)
+- **Relatórios** com gráficos (funil comercial, produção, fluxo de caixa, top clientes).
+- **Automações configuráveis** (gatilho → ação "notify"), disparadas nos eventos
+  de negócio (lead criado, orçamento aprovado, pedido criado).
+- **Assistente (IA heurística, sem API externa)**: estimativa de preço (BOM × markup)
+  e **detecção de anomalias** (margem baixa, inadimplência, OP parada).
+- **PWA**: manifest + theme/ícone (instalável). *Service worker offline, Docker/filas
+  e configurador 3D ficam para quando o volume exigir (conforme D2/plano).* 
+- **Gate:** estimativa/anomalias/automação testados; build verde. ✔
+
+### 🎨 UX/Mobile
+- Layout administrativo refeito para mobile: sidebar vira **drawer** com
+  hambúrguer; cabeçalho fixo só no desktop; padding responsivo; tabelas com
+  rolagem horizontal. (Antes a sidebar fixa espremia o conteúdo no celular.)
+
+**Validação atual:** `lint` ✔ · `typecheck` ✔ · `test` (25/25) ✔ · `build` ✔ (37 rotas)
+
+### Itens deferidos (escala — D2)
+Service worker offline completo, Docker/Redis/BullMQ, S3/Blob dedicado e
+configurador 3D entram quando o volume justificar.
+
+> **Nota técnica (multi-tenant + tipos):** como a Extension injeta `tenantId` em
+> tempo de execução, os tipos gerados do Prisma ainda o exigem em `create`. As
+> chamadas de escrita usam `as any` no `data` (o `tenantId` real vem sempre do
+> contexto da sessão). Trade-off conhecido do padrão; o isolamento é garantido
+> pela Extension e coberto por teste automatizado.

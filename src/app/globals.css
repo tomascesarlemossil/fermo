@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: theme(colors.bone);
+  color: theme(colors.ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: theme(colors.line);
+  border-radius: 9px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid theme(colors.gold);
+  outline-offset: 0;
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-line rounded-xl;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 font-semibold text-sm px-4 py-2.5 rounded-[10px] cursor-pointer transition-colors;
+  }
+  .btn-gold {
+    @apply btn bg-gold text-espresso hover:bg-goldhi;
+  }
+  .btn-dark {
+    @apply btn bg-espresso text-osso hover:bg-esp2;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink border border-line hover:bg-osso;
+  }
+  .btn-danger {
+    @apply btn bg-dangerbg text-danger;
+  }
+  .label {
+    @apply block text-[11px] font-bold text-muted uppercase tracking-wide mb-1.5;
+  }
+  .input {
+    @apply w-full border border-line rounded-[10px] px-3 py-2.5 text-sm bg-white;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap;
+  }
+  .h-serif {
+    @apply font-cormorant;
+  }
+}
