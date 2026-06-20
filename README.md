@@ -110,11 +110,20 @@ npm run build
 
 ## Deploy (Vercel + Neon)
 
-1. Crie um projeto no Neon e copie as connection strings (pooled e direct).
-2. Na Vercel, importe o repositório e configure as variáveis de ambiente:
-   `DATABASE_URL` (pooled), `DIRECT_URL` (direct), `AUTH_SECRET`, `AUTH_TRUST_HOST=true`,
-   `DEFAULT_TENANT_SLUG=fermo`.
-3. O `build` roda `prisma generate && next build`. Após o primeiro deploy, aplique as
-   migrations (`npx prisma migrate deploy`) e rode o seed uma vez.
+1. Crie um projeto no Neon e copie as duas connection strings (**pooled** e **direct**).
+2. Na Vercel → Project → **Settings → Environment Variables**, configure (Production):
+   - `DATABASE_URL` = string **pooled** do Neon (`...-pooler...?sslmode=require`)
+   - `DIRECT_URL` = string **direct** do Neon (`...?sslmode=require`)
+   - `AUTH_SECRET` = um segredo forte (`openssl rand -base64 32`)
+   - `AUTH_TRUST_HOST` = `true`
+   - `DEFAULT_TENANT_SLUG` = `fermo`
+3. Faça o deploy. O `build` já roda **`prisma migrate deploy`** e o **seed** (idempotente),
+   então o banco do Neon é criado/atualizado e as contas demo passam a existir
+   automaticamente — o login funciona no primeiro deploy.
+
+> **Login não conclui?** Quase sempre é falta de `AUTH_SECRET` ou `DATABASE_URL`/`DIRECT_URL`
+> na Vercel (sem banco/segredo não há como autenticar). Confira as 5 variáveis acima e
+> redeploye. O fluxo de login usa navegação completa após autenticar, garantindo que o
+> cookie de sessão seja lido pelo servidor.
 
 © 2026 Fermo · Private Label Shoes · Franca/SP
