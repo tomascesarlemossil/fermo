@@ -1,12 +1,11 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,53 +14,60 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const res = await signIn("credentials", {
-      email: String(form.get("email") || "").toLowerCase(),
-      password: String(form.get("password") || ""),
-      tenant: String(form.get("tenant") || ""),
-      redirect: false,
-    });
-    setLoading(false);
-    if (res?.error) {
-      setError("E-mail ou senha inválidos.");
-      return;
+    try {
+      const res = await signIn("credentials", {
+        email: String(form.get("email") || "").toLowerCase().trim(),
+        password: String(form.get("password") || ""),
+        redirect: false,
+      });
+      if (!res || res.error) {
+        setError("E-mail ou senha inválidos.");
+        setLoading(false);
+        return;
+      }
+      // Navegação completa: garante que o cookie de sessão seja lido pelo servidor.
+      window.location.assign("/app");
+    } catch {
+      setError("Não foi possível entrar. Tente novamente.");
+      setLoading(false);
     }
-    router.push("/app");
-    router.refresh();
   }
 
   return (
-    <main className="min-h-screen bg-espresso flex items-center justify-center px-5">
+    <main className="min-h-screen bg-espresso flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gold mx-auto flex items-center justify-center font-cinzel font-bold text-2xl text-espresso">
-            F
-          </div>
-          <h1 className="font-cinzel tracking-widest text-osso text-xl mt-4">FERMO</h1>
-          <p className="text-osso/60 text-sm mt-1">Plataforma de gestão</p>
+          <Image
+            src="/img/logo.png"
+            alt="Fermo"
+            width={88}
+            height={88}
+            className="mx-auto rounded-full shadow-lg"
+            priority
+          />
+          <p className="text-osso/60 text-sm mt-4 font-cinzel tracking-[0.3em]">PLATAFORMA</p>
         </div>
 
-        <form onSubmit={onSubmit} className="bg-bone rounded-xl p-6 grid gap-3">
+        <form onSubmit={onSubmit} className="bg-bone rounded-2xl p-6 grid gap-3 shadow-xl">
           <div>
             <label className="label">E-mail</label>
-            <input name="email" type="email" required className="input" placeholder="voce@fermo.com.br" />
+            <input name="email" type="email" required autoComplete="username" className="input" placeholder="voce@fermo.com.br" />
           </div>
           <div>
             <label className="label">Senha</label>
-            <input name="password" type="password" required className="input" placeholder="••••••••" />
+            <input name="password" type="password" required autoComplete="current-password" className="input" placeholder="••••••••" />
           </div>
-          <input type="hidden" name="tenant" value="" />
           {error && <p className="text-danger text-sm">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-gold justify-center mt-1">
+          <button type="submit" disabled={loading} className="btn-gold justify-center mt-1 disabled:opacity-60">
             {loading ? "Entrando..." : "Entrar"}
           </button>
-          <Link href="/" className="text-center text-muted text-sm hover:text-gold mt-1">
+          <Link href="/" className="text-center text-muted text-sm hover:text-sela mt-1">
             Voltar ao site
           </Link>
         </form>
 
         <p className="text-osso/40 text-xs text-center mt-5">
-          Demo: diego@fermo.com.br / diegoadmin
+          Demonstração: diego@fermo.com.br / diegoadmin
         </p>
       </div>
     </main>

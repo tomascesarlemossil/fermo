@@ -5,25 +5,30 @@ import { can, type PermissionKey } from "@/lib/rbac";
 import { AdminShell, type NavItem } from "@/components/AdminShell";
 
 const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
-  { href: "/app", label: "Painel", icon: "dashboard" },
-  { href: "/app/crm/leads", label: "Leads", icon: "leads", perm: "lead:read" },
-  { href: "/app/customers", label: "Clientes", icon: "customers", perm: "customer:read" },
-  { href: "/app/catalog", label: "Catálogo", icon: "catalog", perm: "product:read" },
-  { href: "/app/materials", label: "Materiais", icon: "materials", perm: "material:read" },
-  { href: "/app/quotes", label: "Orçamentos", icon: "quotes", perm: "quote:read" },
-  { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read" },
-  { href: "/app/production", label: "Produção", icon: "production", perm: "production:read" },
-  { href: "/app/quality", label: "Qualidade", icon: "quality", perm: "quality:read" },
-  { href: "/app/stock", label: "Estoque", icon: "stock", perm: "stock:read" },
-  { href: "/app/purchasing", label: "Compras", icon: "purchasing", perm: "purchase:read" },
-  { href: "/app/mrp", label: "MRP", icon: "mrp", perm: "purchase:read" },
-  { href: "/app/suppliers", label: "Fornecedores", icon: "suppliers", perm: "supplier:read" },
-  { href: "/app/finance", label: "Financeiro", icon: "finance", perm: "finance:read" },
-  { href: "/app/invoices", label: "Faturamento", icon: "invoices", perm: "finance:read" },
-  { href: "/app/shipping", label: "Expedição", icon: "shipping", perm: "shipping:read" },
-  { href: "/app/reports", label: "Relatórios", icon: "reports", perm: "report:read" },
-  { href: "/app/insights", label: "Assistente IA", icon: "insights", perm: "report:read" },
-  { href: "/app/automations", label: "Automações", icon: "automations", perm: "automation:read" },
+  { href: "/app", label: "Painel", icon: "dashboard", group: "Geral" },
+
+  { href: "/app/crm/leads", label: "Leads", icon: "leads", perm: "lead:read", group: "Comercial" },
+  { href: "/app/customers", label: "Clientes", icon: "customers", perm: "customer:read", group: "Comercial" },
+  { href: "/app/quotes", label: "Orçamentos", icon: "quotes", perm: "quote:read", group: "Comercial" },
+  { href: "/app/orders", label: "Pedidos", icon: "orders", perm: "order:read", group: "Comercial" },
+
+  { href: "/app/catalog", label: "Catálogo", icon: "catalog", perm: "product:read", group: "Produção" },
+  { href: "/app/materials", label: "Materiais", icon: "materials", perm: "material:read", group: "Produção" },
+  { href: "/app/production", label: "Produção", icon: "production", perm: "production:read", group: "Produção" },
+  { href: "/app/quality", label: "Qualidade", icon: "quality", perm: "quality:read", group: "Produção" },
+
+  { href: "/app/stock", label: "Estoque", icon: "stock", perm: "stock:read", group: "Suprimentos" },
+  { href: "/app/purchasing", label: "Compras", icon: "purchasing", perm: "purchase:read", group: "Suprimentos" },
+  { href: "/app/mrp", label: "MRP", icon: "mrp", perm: "purchase:read", group: "Suprimentos" },
+  { href: "/app/suppliers", label: "Fornecedores", icon: "suppliers", perm: "supplier:read", group: "Suprimentos" },
+
+  { href: "/app/finance", label: "Financeiro", icon: "finance", perm: "finance:read", group: "Financeiro" },
+  { href: "/app/invoices", label: "Faturamento", icon: "invoices", perm: "finance:read", group: "Financeiro" },
+  { href: "/app/shipping", label: "Expedição", icon: "shipping", perm: "shipping:read", group: "Financeiro" },
+
+  { href: "/app/reports", label: "Relatórios", icon: "reports", perm: "report:read", group: "Gestão" },
+  { href: "/app/insights", label: "Assistente IA", icon: "insights", perm: "report:read", group: "Gestão" },
+  { href: "/app/automations", label: "Automações", icon: "automations", perm: "automation:read", group: "Gestão" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session) redirect("/login");
 
   const items: NavItem[] = ALL_NAV.filter((n) => !n.perm || can(session, n.perm)).map(
-    ({ href, label, icon }) => ({ href, label, icon }),
+    ({ href, label, icon, group }) => ({ href, label, icon, group }),
   );
 
   async function logout() {

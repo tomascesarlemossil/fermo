@@ -13,9 +13,8 @@ export default async function FaccaoPortal({ params }: { params: { token: string
     <main className="min-h-screen bg-osso">
       <header className="bg-espresso text-osso">
         <div className="max-w-2xl mx-auto px-5 h-16 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gold flex items-center justify-center font-cinzel font-bold text-espresso">
-            F
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/logo.png" alt="Fermo" width={36} height={36} className="rounded-full" />
           <span className="font-cinzel tracking-widest">{po.tenant?.name ?? "FERMO"}</span>
         </div>
       </header>

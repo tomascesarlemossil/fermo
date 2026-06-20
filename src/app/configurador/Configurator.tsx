@@ -46,7 +46,11 @@ export function Configurator({
     <main className="min-h-screen bg-osso">
       <header className="bg-espresso text-osso">
         <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/" className="font-cinzel tracking-widest">FERMO</Link>
+          <Link href="/" className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/logo.png" alt="Fermo" width={32} height={32} className="rounded-full" />
+            <span className="font-cinzel tracking-widest">FERMO</span>
+          </Link>
           <Link href="/" className="text-sm hover:text-gold">Voltar ao site</Link>
         </div>
       </header>
