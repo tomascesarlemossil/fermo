@@ -109,6 +109,7 @@ model User {
   id           String   @id @default(cuid())
   tenantId     String
   email        String
+  username     String?
   name         String
   passwordHash String
   roleId       String
@@ -123,6 +124,7 @@ model User {
   customer Customer? @relation(fields: [customerId], references: [id])
 
   @@unique([tenantId, email])
+  @@unique([tenantId, username])
   @@index([tenantId])
 }
 

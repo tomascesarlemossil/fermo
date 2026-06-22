@@ -24,7 +24,7 @@ declare module "next-auth" {
 }
 
 const credentialsSchema = z.object({
-  email: z.string().email(),
+  email: z.string().min(1),
   password: z.string().min(1),
   tenant: z.string().optional(),
 });
@@ -50,12 +50,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password, tenant } = parsed.data;
+        // aceita login por e-mail OU por usuário (username)
+        const identifier = email.toLowerCase().trim();
 
         const user = await unscoped(() =>
           prisma.user.findFirst({
             where: {
-              email: email.toLowerCase(),
               active: true,
+              OR: [{ email: identifier }, { username: identifier }],
               ...(tenant ? { tenant: { slug: tenant } } : {}),
             },
             include: {

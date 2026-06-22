@@ -126,6 +126,47 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Como funciona */}
+      <section className="max-w-6xl mx-auto px-5 py-20">
+        <div className="text-center mb-12">
+          <p className="text-sela font-cinzel tracking-[0.25em] text-xs mb-2">DO BRIEFING À ENTREGA</p>
+          <h2 className="font-cormorant text-4xl text-ink">Como funciona</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { n: "01", t: "Configure ou briefe", d: "Monte seu modelo no configurador 3D ou fale com nosso time." },
+            { n: "02", t: "Orçamento na hora", d: "Receba a proposta com valor completo e aprove pelo portal." },
+            { n: "03", t: "Produção rastreada", d: "Ficha técnica, corte, pesponto, montagem e qualidade por par." },
+            { n: "04", t: "Expedição", d: "Faturamento, embalagem e envio com rastreio até sua marca." },
+          ].map((s) => (
+            <div key={s.n} className="card p-6">
+              <div className="font-cinzel text-gold text-2xl">{s.n}</div>
+              <h3 className="font-cormorant text-2xl mt-2">{s.t}</h3>
+              <p className="text-muted text-sm mt-2">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA configurador 3D */}
+      <section className="relative bg-espresso text-osso overflow-hidden">
+        <div className="absolute inset-0">
+          <Image src="/img/snk.jpg" alt="" fill className="object-cover opacity-25" />
+          <div className="absolute inset-0 bg-gradient-to-t from-espresso via-espresso/85 to-espresso/60" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-5 py-20 text-center">
+          <p className="text-gold font-cinzel tracking-[0.25em] text-xs mb-3">CONFIGURADOR 3D</p>
+          <h2 className="font-cormorant text-4xl sm:text-5xl">Monte seu tênis e veja o preço na hora</h2>
+          <p className="text-osso/80 mt-4 max-w-xl mx-auto">
+            Gire o modelo em 3D, escolha cor, solado e cadarço, defina a quantidade e gere um
+            orçamento completo — pronto para aprovar.
+          </p>
+          <Link href="/configurador" className="btn-gold mt-8 text-base px-6 py-3 inline-flex">
+            Abrir configurador 3D
+          </Link>
+        </div>
+      </section>
+
       {/* Contato / Lead */}
       <section id="contato" className="bg-bone">
         <div className="max-w-3xl mx-auto px-5 py-20">

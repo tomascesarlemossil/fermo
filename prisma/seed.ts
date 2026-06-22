@@ -47,6 +47,7 @@ async function roleId(key: string) {
 async function createUser(opts: {
   tenantId: string;
   email: string;
+  username?: string;
   name: string;
   password: string;
   roleKey: string;
@@ -55,10 +56,16 @@ async function createUser(opts: {
   const passwordHash = await bcrypt.hash(opts.password, 10);
   return prisma.user.upsert({
     where: { tenantId_email: { tenantId: opts.tenantId, email: opts.email } },
-    update: { name: opts.name, passwordHash, roleId: await roleId(opts.roleKey) },
+    update: {
+      name: opts.name,
+      username: opts.username ?? null,
+      passwordHash,
+      roleId: await roleId(opts.roleKey),
+    },
     create: {
       tenantId: opts.tenantId,
       email: opts.email,
+      username: opts.username ?? null,
       name: opts.name,
       passwordHash,
       roleId: await roleId(opts.roleKey),
@@ -87,7 +94,7 @@ async function seedTenantFermo() {
     },
   });
 
-  await createUser({ tenantId: t, email: "diego@fermo.com.br", name: "Diego", password: "diegoadmin", roleKey: "admin" });
+  await createUser({ tenantId: t, email: "diego@fermo.com.br", username: "diego", name: "Diego", password: "2026", roleKey: "admin" });
   await createUser({ tenantId: t, email: "comercial@fermo.com.br", name: "Comercial", password: "fermo123", roleKey: "comercial" });
   await createUser({ tenantId: t, email: "producao@fermo.com.br", name: "Produção", password: "fermo123", roleKey: "producao" });
 
