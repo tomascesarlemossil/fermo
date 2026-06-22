@@ -29,6 +29,11 @@ const ALL_NAV: (NavItem & { perm?: PermissionKey })[] = [
   { href: "/app/reports", label: "Relatórios", icon: "reports", perm: "report:read", group: "Gestão" },
   { href: "/app/insights", label: "Assistente IA", icon: "insights", perm: "report:read", group: "Gestão" },
   { href: "/app/automations", label: "Automações", icon: "automations", perm: "automation:read", group: "Gestão" },
+
+  { href: "/app/fermo-studio", label: "Studio", icon: "studio", perm: "studio:read", group: "Fermo Studio" },
+  { href: "/app/fermo-studio/modelos", label: "Modelos 3D", icon: "studioModels", perm: "studio:read", group: "Fermo Studio" },
+  { href: "/app/fermo-studio/opcoes", label: "Opções", icon: "studioOptions", perm: "studio:read", group: "Fermo Studio" },
+  { href: "/app/fermo-studio/precificacao", label: "Precificação", icon: "studioPricing", perm: "studio:read", group: "Fermo Studio" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

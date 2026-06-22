@@ -46,8 +46,10 @@ export async function withSession<T>(
 ): Promise<T> {
   const session = await requireSession();
   if (opts?.permission) assertCan(session, opts.permission);
+  // await DENTRO do contexto: Prisma promises são lazy; retornar a promise sem
+  // await faria a query executar fora do AsyncLocalStorage (sem tenant).
   return runWithTenant(
     { tenantId: session.tenantId, userId: session.id, source: opts?.source ?? "server-action" },
-    () => fn(session),
+    async () => await fn(session),
   ) as Promise<T>;
 }

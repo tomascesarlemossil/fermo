@@ -52,6 +52,19 @@ model Tenant {
   invoices         Invoice[]
   shipments        Shipment[]
   automationRules  AutomationRule[]
+  // Fermo Studio
+  shoeCategories       ShoeCategory[]
+  shoeModels           ShoeModel[]
+  shoeModelAssets      ShoeModelAsset[]
+  studioOptions        StudioOption[]
+  priceProfiles        PriceProfile[]
+  priceProfileVersions PriceProfileVersion[]
+  volumeDiscounts      VolumeDiscount[]
+  studioProjects       StudioProject[]
+  brandAssets          BrandAsset[]
+  studioPayments       StudioPayment[]
+  technicalReviews     TechnicalReview[]
+  studioEvents         StudioEvent[]
   files            File[]
   notifications    Notification[]
 }
@@ -109,6 +122,7 @@ model User {
   id           String   @id @default(cuid())
   tenantId     String
   email        String
+  username     String?
   name         String
   passwordHash String
   roleId       String
@@ -123,6 +137,7 @@ model User {
   customer Customer? @relation(fields: [customerId], references: [id])
 
   @@unique([tenantId, email])
+  @@unique([tenantId, username])
   @@index([tenantId])
 }
 
@@ -931,6 +946,330 @@ model AutomationRule {
 
   @@index([tenantId])
   @@index([tenantId, trigger])
+}
+
+// ──────────────────────────────────────────────────────────────
+// FERMO STUDIO — configurador B2B de calçados sob encomenda
+// ──────────────────────────────────────────────────────────────
+
+model ShoeCategory {
+  id          String   @id @default(cuid())
+  tenantId    String
+  slug        String
+  name        String
+  description String?
+  audience    String? // masculino, feminino, unissex, infantil, corporativo
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  models ShoeModel[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+enum ShoeModelStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model ShoeModel {
+  id            String          @id @default(cuid())
+  tenantId      String
+  slug          String
+  name          String
+  categoryId    String?
+  description   String?
+  audience      String?
+  construction  String? // strobel, blaqueado, vulcanizado, colado...
+  shape         String?
+  basePrice     Decimal         @default(0) @db.Decimal(12, 2)
+  minQty        Int             @default(12)
+  leadTimeDays  Int             @default(30)
+  badge         String? // "mais escolhido", "premium", "lançamento", "produção rápida"
+  status        ShoeModelStatus @default(PUBLISHED)
+  modelUrl      String? // GLB principal (demo em /public/models)
+  thumbnailUrl  String?
+  // mapa de malhas editáveis → componentes comerciais
+  editableMeshes Json?
+  isDemo        Boolean         @default(true)
+  seoTitle      String?
+  seoDescription String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category ShoeCategory?    @relation(fields: [categoryId], references: [id])
+  assets   ShoeModelAsset[]
+  projects StudioProject[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+enum AssetKind {
+  GLB
+  THUMBNAIL
+  IMAGE
+  IMAGE_360
+  TECHNICAL
+}
+
+model ShoeModelAsset {
+  id        String    @id @default(cuid())
+  tenantId  String
+  modelId   String
+  kind      AssetKind
+  url       String
+  version   Int       @default(1)
+  status    String    @default("ready") // uploading|processing|ready|error
+  meta      Json?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  model  ShoeModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([modelId])
+}
+
+enum StudioOptionGroup {
+  MATERIAL
+  COLOR
+  SOLE
+  INSOLE
+  LINING
+  LACE
+  EYELET
+  PACKAGING
+  FINISH
+  CUSTOMIZATION
+}
+
+enum StudioPriceType {
+  FIXED_PAIR // valor por par
+  PERCENT // % sobre o unitário base
+  FIXED_DEV // valor único (desenvolvimento)
+}
+
+model StudioOption {
+  id           String            @id @default(cuid())
+  tenantId     String
+  group        StudioOptionGroup
+  code         String
+  name         String
+  description  String?
+  priceType    StudioPriceType   @default(FIXED_PAIR)
+  price        Decimal           @default(0) @db.Decimal(12, 4)
+  leadTimeDays Int               @default(0)
+  minQty       Int               @default(0)
+  colorHex     String? // para grupo COLOR/MATERIAL
+  variant      String? // casa com variante do GLB, quando aplicável
+  materialId   String? // vínculo opcional ao Material do PLM
+  active       Boolean           @default(true)
+  isDemo       Boolean           @default(true)
+  meta         Json?
+  order        Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, group, code])
+  @@index([tenantId, group])
+}
+
+model PriceProfile {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versions PriceProfileVersion[]
+
+  @@index([tenantId])
+}
+
+model PriceProfileVersion {
+  id        String   @id @default(cuid())
+  tenantId  String
+  profileId String
+  version   Int
+  active    Boolean  @default(true)
+  // margem, custos por operação, perdas%, impostos%, sinal%, validade(dias),
+  // desenvolvimento, modelagem, amostra, complexidade etc.
+  params    Json
+  createdAt DateTime @default(now())
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  profile   PriceProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  tiers     VolumeDiscount[]
+
+  @@unique([profileId, version])
+  @@index([tenantId])
+}
+
+model VolumeDiscount {
+  id               String  @id @default(cuid())
+  tenantId         String
+  profileVersionId String
+  minQty           Int
+  maxQty           Int? // null = sem teto
+  discountPct      Decimal @db.Decimal(6, 4) // 0.05 = 5%
+
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  profileVersion PriceProfileVersion @relation(fields: [profileVersionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([profileVersionId])
+}
+
+enum StudioProjectStatus {
+  DRAFT
+  CONFIGURING
+  SAVED
+  QUOTE_GENERATED
+  WAITING_TECHNICAL_REVIEW
+  TECHNICALLY_APPROVED
+  TECHNICALLY_REJECTED
+  WAITING_CUSTOMER_APPROVAL
+  APPROVED
+  EXPIRED
+  CONVERTED_TO_ORDER
+  CANCELLED
+}
+
+model StudioProject {
+  id          String              @id @default(cuid())
+  tenantId    String
+  modelId     String
+  customerId  String?
+  ownerEmail  String?
+  name        String              @default("Meu projeto")
+  status      StudioProjectStatus @default(DRAFT)
+  // seleção completa do configurador (materiais, cores por parte, solado, grade...)
+  selection   Json
+  grade       Json? // distribuição por numeração
+  quantity    Int                 @default(0)
+  brandAssetId String?
+  // snapshot imutável de preço no momento da geração do orçamento
+  priceSnapshot Json?
+  quoteId     String?
+  orderId     String?
+  publicToken String              @unique @default(cuid())
+  needsReview Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  model    ShoeModel         @relation(fields: [modelId], references: [id])
+  reviews  TechnicalReview[]
+  payments StudioPayment[]
+  events   StudioEvent[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model BrandAsset {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  kind      String   @default("LOGO") // LOGO, TEXT, PACKAGING...
+  url       String
+  mimeType  String?
+  size      Int?
+  status    String   @default("ok") // ok | needs_tech (vetoriais a tratar)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+enum PaymentMethod {
+  PIX
+  BOLETO
+  CARD
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+model StudioPayment {
+  id             String        @id @default(cuid())
+  tenantId       String
+  projectId      String?
+  orderId        String?
+  provider       String        @default("sandbox")
+  method         PaymentMethod @default(PIX)
+  kind           String        @default("DEPOSIT") // DEPOSIT (sinal) | BALANCE (saldo)
+  amount         Decimal       @db.Decimal(14, 2)
+  status         PaymentStatus @default(PENDING)
+  externalRef    String?
+  idempotencyKey String        @unique
+  events         Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project StudioProject? @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId])
+}
+
+enum TechReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+model TechnicalReview {
+  id             String           @id @default(cuid())
+  tenantId       String
+  projectId      String
+  status         TechReviewStatus @default(PENDING)
+  reviewer       String?
+  notes          String?
+  costAdjustment Decimal?         @db.Decimal(12, 2)
+  leadAdjustment Int?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([projectId])
+}
+
+model StudioEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  type      String // studio_opened, model_selected, quote_generated...
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project StudioProject? @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, type])
 }
 
 // ──────────────────────────────────────────────────────────────

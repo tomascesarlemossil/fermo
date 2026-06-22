@@ -16,7 +16,7 @@ export default function LoginPage() {
     const form = new FormData(e.currentTarget);
     try {
       const res = await signIn("credentials", {
-        email: String(form.get("email") || "").toLowerCase().trim(),
+        email: String(form.get("email") || "").trim(),
         password: String(form.get("password") || ""),
         redirect: false,
       });
@@ -50,8 +50,8 @@ export default function LoginPage() {
 
         <form onSubmit={onSubmit} className="bg-bone rounded-2xl p-6 grid gap-3 shadow-xl">
           <div>
-            <label className="label">E-mail</label>
-            <input name="email" type="email" required autoComplete="username" className="input" placeholder="voce@fermo.com.br" />
+            <label className="label">Usuário</label>
+            <input name="email" type="text" required autoComplete="username" className="input" placeholder="Diego" />
           </div>
           <div>
             <label className="label">Senha</label>
@@ -67,7 +67,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-osso/40 text-xs text-center mt-5">
-          Demonstração: diego@fermo.com.br / diegoadmin
+          Demonstração — usuário: <strong>Diego</strong> · senha: <strong>2026</strong>
         </p>
       </div>
     </main>
