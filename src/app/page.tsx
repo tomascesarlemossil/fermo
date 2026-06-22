@@ -1,6 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LeadForm } from "@/components/LeadForm";
+import { publicModel } from "@/server/studio/catalog";
+import { DEFAULT_PRICE_PARAMS, type PriceParams, type VolumeTier } from "@/lib/studio/pricing-core";
+import { StudioConfigurator } from "./studio/configurador/[slug]/StudioConfigurator";
+
+export const dynamic = "force-dynamic";
+
+const DEFAULT_MODEL = "tenis-casual-masculino";
 
 const linhas = [
   { t: "Sandálias", d: "Couro nobre, conforto e caimento impecável.", img: "/img/sand.jpg" },
@@ -14,7 +20,36 @@ const numeros = [
   { n: "Sob encomenda", l: "Produção dedicada por pedido." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const slug = process.env.DEFAULT_TENANT_SLUG || "fermo";
+  const data = await publicModel(slug, DEFAULT_MODEL).catch(() => null);
+
+  let configurator: React.ReactNode = null;
+  if (data?.model) {
+    const m = data.model;
+    const params: PriceParams = data.priceProfile
+      ? { ...DEFAULT_PRICE_PARAMS, ...(data.priceProfile.version.params as any) }
+      : DEFAULT_PRICE_PARAMS;
+    const tiers: VolumeTier[] = data.priceProfile
+      ? data.priceProfile.version.tiers.map((t: any) => ({ minQty: t.minQty, maxQty: t.maxQty ?? null, discountPct: Number(t.discountPct) }))
+      : [];
+    const optionsByGroup: Record<string, any[]> = {};
+    for (const [g, list] of Object.entries(data.optionsByGroup)) {
+      optionsByGroup[g] = (list as any[]).map((o) => ({
+        id: o.id, code: o.code, name: o.name, price: Number(o.price), priceType: o.priceType,
+        colorHex: o.colorHex, variant: o.variant, leadTimeDays: o.leadTimeDays, minQty: o.minQty,
+      }));
+    }
+    configurator = (
+      <StudioConfigurator
+        model={{ id: m.id, slug: m.slug, name: m.name, modelUrl: m.modelUrl, basePrice: Number(m.basePrice), minQty: m.minQty, leadTimeDays: m.leadTimeDays, isDemo: m.isDemo }}
+        optionsByGroup={optionsByGroup}
+        params={params}
+        tiers={tiers}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen">
       {/* Top bar */}
@@ -25,10 +60,10 @@ export default function Home() {
             <span className="font-cinzel tracking-widest text-lg">FERMO</span>
           </div>
           <nav className="flex items-center gap-4 text-sm">
+            <a href="#configurador" className="hidden sm:inline hover:text-gold">Configurador</a>
             <a href="#linhas" className="hidden sm:inline hover:text-gold">Linhas</a>
             <a href="#processo" className="hidden sm:inline hover:text-gold">Processo</a>
-            <a href="#contato" className="hidden sm:inline hover:text-gold">Contato</a>
-            <Link href="/studio" className="hover:text-gold">Configurador</Link>
+            <Link href="/studio/modelos" className="hover:text-gold">Modelos</Link>
             <Link href="/login" className="btn-gold py-2">Entrar</Link>
           </nav>
         </div>
@@ -40,24 +75,24 @@ export default function Home() {
           <Image src="/img/hero.jpg" alt="" fill priority className="object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-espresso/30" />
         </div>
-        <div className="relative max-w-6xl mx-auto px-5 py-24 sm:py-32">
+        <div className="relative max-w-6xl mx-auto px-5 py-20 sm:py-28">
           <div className="max-w-xl">
-            <p className="text-gold font-cinzel tracking-[0.25em] text-xs sm:text-sm mb-4">PRIVATE LABEL SHOES</p>
+            <p className="text-gold font-cinzel tracking-[0.25em] text-xs sm:text-sm mb-4">FERMO STUDIO · PRIVATE LABEL</p>
             <h1 className="font-cormorant text-5xl sm:text-7xl leading-[1.05]">
-              Sua marca.
+              Crie sua marca.
               <br />
-              Nosso couro.
+              Configure seu calçado.
               <br />
-              <span className="text-gold">Feito à mão.</span>
+              <span className="text-gold">Receba seu orçamento na hora.</span>
             </h1>
             <p className="mt-6 text-osso/85 max-w-md text-lg">
-              Fábrica de calçados em couro em Franca/SP. Produzimos sua coleção sob encomenda — do
-              briefing à expedição — com padrão de manufatura de luxo.
+              Monte seu modelo em 3D, escolha materiais, cores e acabamentos, defina a quantidade e
+              gere um orçamento completo — direto com a fábrica em Franca/SP.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#contato" className="btn-gold">Solicitar orçamento</a>
-              <Link href="/studio" className="btn-ghost text-osso border-osso/30 hover:bg-esp2">
-                Montar meu modelo
+              <a href="#configurador" className="btn-gold">Montar meu modelo</a>
+              <Link href="/studio/modelos" className="btn-ghost text-osso border-osso/30 hover:bg-esp2">
+                Ver modelos
               </Link>
             </div>
           </div>
@@ -76,7 +111,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Linhas */}
+      {/* CONFIGURADOR 3D (aberto na home) */}
+      <section id="configurador" className="bg-bone">
+        <div className="max-w-6xl mx-auto px-4 sm:px-5 py-14 sm:py-20">
+          <div className="mb-8">
+            <p className="text-sela font-cinzel tracking-[0.25em] text-xs mb-2">CONFIGURADOR 3D</p>
+            <h2 className="font-cormorant text-4xl sm:text-5xl text-ink">Monte seu tênis e orce na hora</h2>
+            <p className="text-muted mt-2 max-w-2xl">
+              Gire o modelo em 3D, escolha material, cor, solado, cadarço e acabamento — o preço
+              atualiza ao vivo. Ao final, gere seu orçamento completo.
+            </p>
+          </div>
+          {configurator ?? (
+            <div className="card p-10 text-center text-muted">
+              Configurador indisponível no momento.{" "}
+              <Link href="/studio/modelos" className="text-sela underline">Ver modelos</Link>.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Linhas / nossos modelos */}
       <section id="linhas" className="max-w-6xl mx-auto px-5 py-20">
         <h2 className="font-cormorant text-4xl text-ink mb-2">Nossas linhas</h2>
         <p className="text-muted mb-10">Modelos base que adaptamos à identidade da sua marca.</p>
@@ -84,12 +139,7 @@ export default function Home() {
           {linhas.map((l) => (
             <div key={l.t} className="card overflow-hidden group">
               <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={l.img}
-                  alt={l.t}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <Image src={l.img} alt={l.t} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
               </div>
               <div className="p-5">
                 <h3 className="font-cormorant text-2xl">{l.t}</h3>
@@ -97,6 +147,9 @@ export default function Home() {
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-8">
+          <Link href="/studio/modelos" className="btn-ghost">Ver todos os modelos</Link>
         </div>
       </section>
 
@@ -134,8 +187,8 @@ export default function Home() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { n: "01", t: "Configure ou briefe", d: "Monte seu modelo no configurador 3D ou fale com nosso time." },
-            { n: "02", t: "Orçamento na hora", d: "Receba a proposta com valor completo e aprove pelo portal." },
+            { n: "01", t: "Configure em 3D", d: "Monte seu modelo, escolha materiais, cores e acabamentos." },
+            { n: "02", t: "Orçamento na hora", d: "Veja o preço ao vivo e gere a proposta completa." },
             { n: "03", t: "Produção rastreada", d: "Ficha técnica, corte, pesponto, montagem e qualidade por par." },
             { n: "04", t: "Expedição", d: "Faturamento, embalagem e envio com rastreio até sua marca." },
           ].map((s) => (
@@ -145,36 +198,6 @@ export default function Home() {
               <p className="text-muted text-sm mt-2">{s.d}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* CTA configurador 3D */}
-      <section className="relative bg-espresso text-osso overflow-hidden">
-        <div className="absolute inset-0">
-          <Image src="/img/snk.jpg" alt="" fill className="object-cover opacity-25" />
-          <div className="absolute inset-0 bg-gradient-to-t from-espresso via-espresso/85 to-espresso/60" />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-5 py-20 text-center">
-          <p className="text-gold font-cinzel tracking-[0.25em] text-xs mb-3">CONFIGURADOR 3D</p>
-          <h2 className="font-cormorant text-4xl sm:text-5xl">Monte seu tênis e veja o preço na hora</h2>
-          <p className="text-osso/80 mt-4 max-w-xl mx-auto">
-            Gire o modelo em 3D, escolha cor, solado e cadarço, defina a quantidade e gere um
-            orçamento completo — pronto para aprovar.
-          </p>
-          <Link href="/studio" className="btn-gold mt-8 text-base px-6 py-3 inline-flex">
-            Abrir configurador 3D
-          </Link>
-        </div>
-      </section>
-
-      {/* Contato / Lead */}
-      <section id="contato" className="bg-bone">
-        <div className="max-w-3xl mx-auto px-5 py-20">
-          <div className="text-center mb-8">
-            <h2 className="font-cormorant text-4xl text-ink">Vamos criar sua coleção?</h2>
-            <p className="text-muted mt-2">Conte sobre seu projeto. Retornamos com um orçamento personalizado.</p>
-          </div>
-          <LeadForm source="site" />
         </div>
       </section>
 
