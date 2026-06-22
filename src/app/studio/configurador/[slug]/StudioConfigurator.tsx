@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   computePrice,
   aggregateSelection,
@@ -74,12 +74,60 @@ export function StudioConfigurator({
   });
   const [useGrade, setUseGrade] = useState(false);
   const [grade, setGrade] = useState<Record<number, number>>({});
+  const mvRef = useRef<any>(null);
+  const [mvLoaded, setMvLoaded] = useState(false);
 
   useEffect(() => {
     let on = true;
     import("@google/model-viewer").then(() => on && setReady(true)).catch(() => {});
     return () => { on = false; };
   }, []);
+
+  // aparência da superfície (couro liso × camurça fosca × verniz brilhante)
+  const surface = useMemo(() => {
+    const finishes: string[] = sel.finishes ?? [];
+    let roughness = 0.55;
+    let metalness = 0;
+    switch (sel.material) {
+      case "camurca": roughness = 0.95; break;
+      case "couro-floater": roughness = 0.42; break;
+      case "couro-liso": roughness = 0.5; break;
+      case "sintetico": roughness = 0.7; break;
+    }
+    if (finishes.includes("verniz")) { roughness = 0.12; metalness = 0.12; }
+    return { roughness, metalness };
+  }, [sel.material, sel.finishes]);
+
+  // detecta quando o modelo 3D termina de carregar
+  useEffect(() => {
+    const mv: any = mvRef.current;
+    if (!mv) return;
+    const onLoad = () => setMvLoaded(true);
+    mv.addEventListener("load", onLoad);
+    if (mv.loaded) setMvLoaded(true);
+    return () => mv.removeEventListener("load", onLoad);
+  }, [ready]);
+
+  // aplica a aparência no modelo sempre que material/acabamento/cor mudam
+  useEffect(() => {
+    const mv: any = mvRef.current;
+    if (!mv || !mvLoaded) return;
+    const apply = () => {
+      try {
+        const mats = mv.model?.materials ?? [];
+        for (const m of mats) {
+          m.pbrMetallicRoughness?.setRoughnessFactor?.(surface.roughness);
+          m.pbrMetallicRoughness?.setMetallicFactor?.(surface.metalness);
+        }
+      } catch {
+        /* noop */
+      }
+    };
+    apply();
+    // reaplica após a troca de variante (swap assíncrono)
+    const t = setTimeout(apply, 120);
+    return () => clearTimeout(t);
+  }, [surface, mvLoaded, sel.color]);
 
   const allOptions: OptionLite[] = useMemo(
     () =>
@@ -123,6 +171,7 @@ export function StudioConfigurator({
         <div className="card overflow-hidden bg-gradient-to-b from-osso to-bone">
           <div className="aspect-square w-full">
             <model-viewer
+              ref={mvRef}
               src={model.modelUrl ?? "/models/shoe.glb"}
               alt={`${model.name} em 3D`}
               camera-controls
