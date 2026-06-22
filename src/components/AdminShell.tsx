@@ -24,6 +24,10 @@ import {
   BarChart3,
   Sparkles,
   Zap,
+  Box,
+  Gem,
+  SlidersHorizontal,
+  Coins,
   LogOut,
   Menu,
   X,
@@ -52,6 +56,10 @@ const ICONS: Record<string, LucideIcon> = {
   reports: BarChart3,
   insights: Sparkles,
   automations: Zap,
+  studio: Gem,
+  studioModels: Box,
+  studioOptions: SlidersHorizontal,
+  studioPricing: Coins,
 };
 
 function groupOrder(items: NavItem[]): string[] {

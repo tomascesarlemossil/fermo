@@ -40,6 +40,9 @@ export const PERMISSIONS = {
   "report:read": "Ver relatórios",
   "automation:read": "Ver automações",
   "automation:write": "Configurar automações",
+  "studio:read": "Ver Fermo Studio (modelos, projetos)",
+  "studio:write": "Gerenciar Fermo Studio (modelos, opções, preços)",
+  "studio:review": "Revisão técnica de projetos do Studio",
   "user:read": "Ver usuários",
   "user:write": "Gerenciar usuários",
   "audit:read": "Ver auditoria",
@@ -77,6 +80,8 @@ export const ROLES = {
       "shipping:read",
       "shipping:write",
       "report:read",
+      "studio:read",
+      "studio:write",
     ] as PermissionKey[],
   },
   producao: {
@@ -102,6 +107,8 @@ export const ROLES = {
       "shipping:read",
       "shipping:write",
       "report:read",
+      "studio:read",
+      "studio:review",
     ] as PermissionKey[],
   },
   cliente: {

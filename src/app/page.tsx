@@ -28,7 +28,7 @@ export default function Home() {
             <a href="#linhas" className="hidden sm:inline hover:text-gold">Linhas</a>
             <a href="#processo" className="hidden sm:inline hover:text-gold">Processo</a>
             <a href="#contato" className="hidden sm:inline hover:text-gold">Contato</a>
-            <Link href="/configurador" className="hover:text-gold">Configurador</Link>
+            <Link href="/studio" className="hover:text-gold">Configurador</Link>
             <Link href="/login" className="btn-gold py-2">Entrar</Link>
           </nav>
         </div>
@@ -56,7 +56,7 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#contato" className="btn-gold">Solicitar orçamento</a>
-              <Link href="/configurador" className="btn-ghost text-osso border-osso/30 hover:bg-esp2">
+              <Link href="/studio" className="btn-ghost text-osso border-osso/30 hover:bg-esp2">
                 Montar meu modelo
               </Link>
             </div>
@@ -161,7 +161,7 @@ export default function Home() {
             Gire o modelo em 3D, escolha cor, solado e cadarço, defina a quantidade e gere um
             orçamento completo — pronto para aprovar.
           </p>
-          <Link href="/configurador" className="btn-gold mt-8 text-base px-6 py-3 inline-flex">
+          <Link href="/studio" className="btn-gold mt-8 text-base px-6 py-3 inline-flex">
             Abrir configurador 3D
           </Link>
         </div>
